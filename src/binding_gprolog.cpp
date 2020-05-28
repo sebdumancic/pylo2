@@ -5,6 +5,7 @@
 #include <pybind11/pybind11.h>
 #include "language.h"
 #include "gprolog.h"
+//#include <vector>
 
 //#include <pybind11/stl.h>
 //#include <unordered_map>
@@ -13,14 +14,135 @@ using namespace std;
 
 namespace py = pybind11;
 
+
+void start_gprolog();
+Const pygp_term_to_const(PlTerm term);
+Integer pygp_term_to_int(PlTerm term);
+Decimal pygp_term_to_decimal(PlTerm term);
+List pygp_term_to_list(PlTerm term);
+Structure pygp_term_to_structure(PlTerm term);
+
+
 void start_gprolog() {
     const char *defaults[] = {"abc"};
     Pl_Start_Prolog(1, const_cast<char **>(defaults));
 }
 
+Const pygp_term_to_const(PlTerm term) {
+    string name = Pl_Rd_String(term);
+    Const tmpC(name);
+
+    return tmpC;
+}
+
+Integer pygp_term_to_int(PlTerm term) {
+    int value = Pl_Rd_Integer(term);
+    Integer tmpI(value);
+
+    return tmpI;
+}
+
+Decimal pygp_term_to_decimal(PlTerm term) {
+    double value = Pl_Rd_Float(term);
+    Decimal tmpD(value);
+
+    return tmpD;
+}
+
+List pygp_term_to_list(PlTerm term) {
+    int listLength = Pl_List_Length(term);
+    PlTerm *elemts;
+    vector<Term*> convertedElems;
+
+    elemts = Pl_Rd_List(term);
+
+    for(int i=0; i < listLength; i++) {
+        PlTerm tt = *(elemts + i);
+        int termType = Pl_Type_Of_Term(tt);
+
+        if (termType == PL_ATM) {
+            Const c = pygp_term_to_const(term);
+            convertedElems.push_back(&c);
+        }
+        else if (termType == PL_INT) {
+            Integer it = pygp_term_to_int(term);
+            convertedElems.push_back(&it);
+        }
+        else if (termType == PL_FLT) {
+            Decimal dt = pygp_term_to_decimal(term);
+            convertedElems.push_back(&dt);
+        }
+        else if (termType == PL_LST) {
+            List lt = pygp_term_to_list(term);
+            convertedElems.push_back(&lt);
+        }
+        else if (termType == PL_STC) {
+            Structure st = pygp_term_to_structure(term);
+            convertedElems.push_back(&st);
+        }
+        else {
+            throw "Don't know how to convert term";
+        }
+
+    }
+
+    List l(convertedElems);
+
+    return l;
+}
+
+
+Structure pygp_term_to_structure(PlTerm term) {
+    //int arity;
+    PlTerm func, arity;
+
+    Pl_Builtin_Functor(term, func, arity);
+}
+
+vector<vector<Term*>> query(const string& functorName, const py::list& queryArguments, int maxSolutions = -1) {
+    PlTerm argsToUse[queryArguments.size()];
+    vector<PlTerm> vars;
+    vector<vector<Term*>> allSols;
+
+    for(int i=0; i < queryArguments.size(); i++) {
+        auto tmpt = queryArguments[i].cast<PlTerm>();
+        argsToUse[i] = tmpt;
+
+        if (Pl_Builtin_Var(tmpt)) {
+            vars.push_back(tmpt);
+        }
+    }
+
+    int functor = Pl_Find_Atom(functorName.c_str());
+
+
+    Pl_Query_Begin(PL_TRUE);
+    int res;
+
+
+    res = Pl_Query_Call(functor, queryArguments.size(), argsToUse);
+
+    while (res) {
+        vector<Term*> tmpSol;
+
+
+        res = Pl_Query_Next_Solution();
+    }
+
+    Pl_Query_End(PL_RECOVER);
+
+
+}
+
 
 PYBIND11_MODULE(pygprolog, m) {
     // basic data structures
+
+    py::enum_<PlBool>(m, "PlBool")
+            .value("True", PL_TRUE)
+            .value("False", PL_FALSE)
+            .export_values();
+
     py::class_<Term>(m, "Term")
             .def(py::init<const std::string &>())
             .def("getName", &Term::getName);
@@ -85,6 +207,12 @@ PYBIND11_MODULE(pygprolog, m) {
     m.def("pygp_Atom_True", &Pl_Atom_True, "returns true");
     m.def("pygp_Atom_End_Of_File", &Pl_Atom_End_Of_File, "end of file character");
 
+    // reading terms
+    m.def("pygp_Rd_Integer", &Pl_Rd_Integer, "read integer value of the term");
+    m.def("pygp_Rd_Decimal", &Pl_Rd_Float, "read decimal value of the term");
+    m.def("pygp_Rd_String", &Pl_Rd_String, "read the string from the term");
+
+
     // unification
     m.def("pygp_Unif", &Pl_Unif, "Performs unification of two terms");
     m.def("pygp_Unif_With_Occurs_Check", &Pl_Unif_With_Occurs_Check, "performs unification with occurs check");
@@ -113,11 +241,57 @@ PYBIND11_MODULE(pygprolog, m) {
         }, "creates a compound from the functor, arity and a list of args");
 
     // checking the types of terms
+    m.def("pygp_Builtin_Var", &Pl_Builtin_Var, "checks if the term is a variable");
+    m.def("pygp_Builtin_Non_Var", &Pl_Builtin_Non_Var, "is term not a variable?");
+    m.def("pygp_Builtin_Atom", &Pl_Builtin_Atom, "is term an atom");
+    m.def("pygp_Builtin_Integer", &Pl_Builtin_Integer, "is term an integer");
+    m.def("pygp_Builtin_Float", &Pl_Builtin_Float, "is term a float");
+    m.def("pygp_Builtin_Number", &Pl_Builtin_Number, "is term a number");
+    m.def("pygp_Builtin_Atomic", &Pl_Builtin_Atomic, "is term atomic");
+    m.def("pygp_Builtin_Compound", &Pl_Builtin_Compound, "is term a compound");
+    m.def("pygp_Builtin_Callable", &Pl_Builtin_Callable, "is term callable");
+    m.def("pygp_Builtin_List", &Pl_Builtin_List, "is term a list");
+    m.def("pygp_Builtin_Partial_List", &Pl_Builtin_Partial_List, "is term a partial list");
+    m.def("pygp_Builtin_List_Or_Partial_List", &Pl_Builtin_List_Or_Partial_List);
+    m.def("pygp_Type_Of_Term", [](PlTerm term) {
+            int res;
+            res = Pl_Type_Of_Term(term);
+
+            if (res == PL_PLV) {
+                return 1;
+            }
+            else if (res == PL_FDV) {
+                return 2;
+            }
+            else if (res == PL_INT) {
+                return 3;
+            }
+            else if (res == PL_FLT) {
+                return 4;
+            }
+            else if (res == PL_ATM) {
+                return 5;
+            }
+            else if (res == PL_LST) {
+                return 6;
+            }
+            else {
+                return 7;
+            }
+
+        }, "return type of term");
+    m.def("pygp_List_Length", &Pl_List_Length, "returns the length of the list");
+
+
+    // comparing prolog terms
+
 
     // builtin functors: functor, arg, =..
     m.def("pygp_Builtin_Functor", &Pl_Builtin_Functor, "maps term to the functor and arity");
     m.def("pygp_Builtin_Arg", &Pl_Builtin_Arg, "gets the arg_no from term ");
     m.def("pygp_Builtin_Univ", &Pl_Builtin_Univ, "performs =..");
+
+    // comparing arithmetic expressions
 
     // query manipulation
     m.def("pygp_Query_Begin", []() {

@@ -29,6 +29,8 @@ v2 = pygprolog.pygp_Mk_Variable()
 
 q_Var2 = pygprolog.pygp_Query_Call(p, 2, [v1, v2])
 
+pygprolog.pygp_Type_Of_Term(v1)
+
 res = pygprolog.pygp_Query_Next_Solution()
 
 pygprolog.pygp_Query_End()

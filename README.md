@@ -10,11 +10,10 @@ Engines to use:
   - [ ] [YAP](http://cracs.fc.up.pt/~nf/Docs/Yap/yap.html) and [C interface](http://cracs.fc.up.pt/~nf/Docs/Yap/yap.html#SEC150)
   - [x] GNU Prolog and [C interface](http://www.gprolog.org/manual/gprolog.html#sec335)
   - [ ] XSB PRolog and C interface
+  - [ ] [FASSIL](https://dectau.uclm.es/fasill/)
+  - [ ] [TauProlog](http://tau-prolog.org/)
 
 # Practical
 
 do `export LD_LIBRARY_PATH=/Users/seb/.ciaoroot/master/build/eng/ciaoengine/objs/DARWINx86_64/` before importing python lib
 
-## `.a` to `.dylib` on OSX
-
-[link](https://stackoverflow.com/questions/25321911/convert-a-to-dylib-in-mac-osx)
