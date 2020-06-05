@@ -35,4 +35,8 @@ res = pygprolog.pygp_Query_Next_Solution()
 
 pygprolog.pygp_Query_End()
 
+empty = pygprolog.pygp_Find_Atom("[]")
+empty_term = pygprolog.pygp_Mk_Atom(empty)
+ll = pygprolog.pygp_Mk_List([a_term, b_term, empty_term])
+
 pygprolog.pygp_Stop_Prolog()
