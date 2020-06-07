@@ -114,9 +114,9 @@ class List(Structure):
     def __init__(self, elements: Sequence[Union[Term, int, float]]):
         argsToUse = []
         for elem in elements:
-            if isinstance(elem, str) and elem.isupper():
+            if isinstance(elem, str) and elem[0].isupper():
                 argsToUse.append(global_context.get_variable(elem))
-            elif isinstance(elem, str) and elem.islower():
+            elif isinstance(elem, str) and elem[0].islower():
                 argsToUse.append(global_context.get_constant(elem))
             elif isinstance(elem, (Constant, Variable, Structure, Predicate, List)):
                 argsToUse.append(elem)
@@ -158,9 +158,9 @@ class Predicate:
         argsToUse = []
         # global global_context
         for elem in args:
-            if isinstance(elem, str) and elem.isupper():
+            if isinstance(elem, str) and elem[0].isupper():
                 argsToUse.append(global_context.get_variable(elem))
-            elif isinstance(elem, str) and elem.islower():
+            elif isinstance(elem, str) and elem[0].islower():
                 argsToUse.append(global_context.get_constant(elem))
             elif isinstance(elem, (Constant, Variable, Structure, Predicate)):
                 argsToUse.append(elem)
@@ -278,6 +278,9 @@ class Clause:
         else:
             raise Exception(f"Don't know how to add bject of type {type(other)} to Clause")
 
+    def __repr__(self):
+        return f"{self._head} :- {self._body}"
+
 
 class Context:
 
@@ -300,38 +303,44 @@ class Context:
         return self._vars[name]
 
     def get_functor(self, name: str, arity: int):
-        if arity not in self._functors:
-            self._functors[arity] = {}
+        if name not in self._functors:
+            self._functors[name] = {}
 
-        if name not in self._functors[arity]:
-            self._functors[arity][name] = Functor(name, arity)
+        if arity not in self._functors[name]:
+            self._functors[name][arity] = Functor(name, arity)
 
-        return self._functors[arity][name]
+        return self._functors[name][arity]
 
     def get_predicate(self, name: str, arity: int):
-        if arity not in self._predicates:
-            self._predicates[arity] = {}
+        if name not in self._predicates:
+            self._predicates[name] = {}
 
-        if name not in self._predicates[arity]:
-            self._predicates[arity][name] = Predicate(name, arity)
+        if arity not in self._predicates[name]:
+            self._predicates[name][arity] = Predicate(name, arity)
 
-        return self._predicates[arity][name]
+        return self._predicates[name][arity]
 
-    def get_symbol(self, name):
+    def get_symbol(self, name, **kwargs):
         if name in self._consts:
             return self._consts[name]
         elif name in self._functors:
-            return self._functors[name]
-        else:
-            matched_arity = []
-            for a in self._predicates:
-                if name in self._predicates[a]:
-                    matched_arity.append(a)
-
-            if len(matched_arity) == 1:
-                return self._predicates[matched_arity[0]][name]
+            if 'arity' in kwargs:
+                return self._functors[name][kwargs['arity']]
             else:
-                raise Exception(f"Cannot identify symbol {name} {'(multiple symbols with the same name)' if len(matched_arity) else ''}")
+                ks = list(self._functors[name].keys())
+                if len(ks) > 1:
+                    raise Exception(f"Cannot uniquely identify functor symbol {name}")
+                return self._functors[name][ks[0]]
+        elif name in self._predicates:
+            if 'arity' in kwargs:
+                return self._predicates[name][kwargs['arity']]
+            else:
+                ks = list(self._predicates[name].keys())
+                if len(ks) > 1:
+                    raise Exception(f"Cannot uniquely identify predicate symbol {name}")
+                return self._predicates[name][ks[0]]
+        else:
+            raise Exception(f"Cannot identify symbol {name}")
 
 
 global_context = Context()

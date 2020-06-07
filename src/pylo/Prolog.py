@@ -24,7 +24,7 @@ class Prolog(ABC):
         pass
 
     @abstractmethod
-    def query(self, query, max_solutions=-1):
+    def query(self, *query, **kwargs):
         pass
 
 

@@ -7,13 +7,13 @@ SET(SOURCE_DIR "src")
 set(SOURCES "${SOURCE_DIR}/language.cpp")
 
 option(CIAO "Compile Ciao" OFF)
-option(GPROLOG "Compile GNU-Prolog" ON)
+option(GPROLOG "Compile GNU-Prolog" OFF)
+option(XSBPROLOG "Compile XSB Prolog" ON)
 
 add_subdirectory(lib/pybind11)
 
 if (CIAO)
 pybind11_add_module("${PROJECT_NAME}" ${SOURCES} "${SOURCE_DIR}/binding_ciao.cpp")
-
 
 # CIAO THINGIES
 include_directories("${PROJECT_NAME}" /Users/seb/.ciaoroot/master/build/eng/ciaoengine/include)
@@ -50,6 +50,15 @@ if (GPROLOG)
 add_compile_options(-Wall -Wextra -pedantic -v -undefined dynamic_lookup -fPIC)
 endif(GPROLOG)
 
+# XSB PROLOG
+if(XSBPROLOG)
+    pybind11_add_module(pyxsb ${SOURCES} "${SOURCE_DIR}/binding_xsbprolog.cpp")
+    include_directories(/Users/seb/Documents/programs/XSB/emu)
+    include_directories(/Users/seb/Documents/programs/XSB/config/i386-apple-darwin18.7.0)
+    link_libraries(pyxsb PUBLIC /Users/seb/Documents/programs/XSB/config/i386-apple-darwin18.7.0/saved.o)
+    target_link_libraries(pyxsb PUBLIC /Users/seb/Documents/programs/XSB/config/i386-apple-darwin18.7.0/saved.o/xsb.o)
+    add_compile_options(-O3 -fno-strict-aliasing -v -undefined dynamic_lookup -fPIC -Wall -pipe )
+endif(XSBPROLOG)
 
 #option(BUILD_TESTS "Build C++ test files" OFF)
 #if (BUILD_TESTS)
