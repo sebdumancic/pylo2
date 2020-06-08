@@ -8,6 +8,14 @@ class Prolog(ABC):
         pass
 
     @abstractmethod
+    def consult(self, filename: str):
+        pass
+
+    @abstractmethod
+    def use_module(self, module: str, **kwargs):
+        pass
+
+    @abstractmethod
     def asserta(self, clause):
         pass
 

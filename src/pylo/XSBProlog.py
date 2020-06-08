@@ -99,6 +99,15 @@ class XSBProlog(Prolog):
     def __del__(self):
         pyxsb.pyxsb_close()
 
+    def consult(self, filename: str):
+        return pyxsb.pyxsb_command_string(f"consult('{filename}').")
+
+    def use_module(self, module: str, **kwargs):
+        assert 'predicates' in kwargs, "XSB Prolog: need to specify which predicates to import from module"
+        predicates = kwargs['predicates']
+        command = f"use_module({module},[{','.join([x.get_name() + '/' + str(x.get_arity()) for x in predicates])}])."
+        return pyxsb.pyxsb_command_string(command)
+
     def asserta(self, clause: Union[Clause, Literal]):
         if isinstance(clause, Literal):
             return pyxsb.pyxsb_command_string(f"asserta({clause}).")
@@ -183,7 +192,8 @@ if __name__ == '__main__':
 
     l = List([1, 2, 3, 4, 5])
 
-    member = Predicate("member", 2)
+    member = global_context.get_predicate("member", 2)
+    pl.use_module("lists", predicates=[member])
 
     query2 = member(X, l)
 

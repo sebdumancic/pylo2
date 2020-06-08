@@ -182,6 +182,20 @@ class GNUProlog(Prolog):
     def __del__(self):
         pygprolog.pygp_Stop_Prolog()
 
+    def consult(self, filename):
+        consult = pygprolog.pygp_Find_Atom("consult")
+        arg = pygprolog.pygp_Mk_String(filename)
+
+        pygprolog.pygp_Query_Begin()
+        q_Var1 = pygprolog.pygp_Query_Call(consult, 1, [arg])
+        pygprolog.pygp_Query_End()
+
+        return q_Var1
+
+    def use_module(self, module: str, **kwargs):
+        raise Exception(f"GNUProlog does not have modules.")
+
+
     def _asserta_lit(self, literal: Literal):
         pl = _lit_to_pygp(literal)
         asa_p = pygprolog.pygp_Find_Atom("asserta")
@@ -343,14 +357,14 @@ class GNUProlog(Prolog):
 if __name__ == '__main__':
     pl = GNUProlog()
 
-    p = Predicate("p", 2)
-    f = Functor("t", 3)
+    p = global_context.get_predicate("p", 2)
+    f = global_context.get_functor("t", 3)
     f1 = p("a", "b")
 
     pl.assertz(f1)
 
-    X = Variable("X")
-    Y = Variable("Y")
+    X = global_context.get_variable("X")
+    Y = global_context.get_variable("Y")
 
     query = p(X, Y)
 
@@ -375,14 +389,14 @@ if __name__ == '__main__':
 
     l = List([1, 2, 3, 4, 5])
 
-    member = Predicate("member", 2)
+    member = global_context.get_variable("member", 2)
 
     query2 = member(X, l)
 
     rv = pl.query(query2)
     print("all solutions to list membership ", rv)
 
-    r = Predicate("r", 2)
+    r = global_context.get_variable("r", 2)
     f4 = r("a", l)
     f5 = r("a", "b")
 
