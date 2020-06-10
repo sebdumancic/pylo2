@@ -389,14 +389,14 @@ if __name__ == '__main__':
 
     l = List([1, 2, 3, 4, 5])
 
-    member = global_context.get_variable("member", 2)
+    member = global_context.get_predicate("member", 2)
 
     query2 = member(X, l)
 
     rv = pl.query(query2)
     print("all solutions to list membership ", rv)
 
-    r = global_context.get_variable("r", 2)
+    r = global_context.get_predicate("r", 2)
     f4 = r("a", l)
     f5 = r("a", "b")
 
