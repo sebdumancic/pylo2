@@ -1,7 +1,7 @@
-from src.pylo.Prolog import (
+from pylo.engines.Prolog import (
     Prolog
 )
-from src.pylo.language import Constant, Variable, Functor, Structure, List, Predicate, Literal, Negation, Clause, \
+from pylo.engines.language import Constant, Variable, Functor, Structure, List, Predicate, Literal, Negation, Clause, \
     global_context
 import sys
 sys.path.append("../../build")
