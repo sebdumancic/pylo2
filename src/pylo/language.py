@@ -158,6 +158,11 @@ class Predicate:
         argsToUse = []
         # global global_context
         for elem in args:
+            if isinstance(elem, str) and elem.isdigit():
+                if '.' in elem:
+                    argsToUse.append(float(elem))
+                else:
+                    argsToUse.append(int(elem))
             if isinstance(elem, str) and elem[0].isupper():
                 argsToUse.append(global_context.get_variable(elem))
             elif isinstance(elem, str) and elem[0].islower():

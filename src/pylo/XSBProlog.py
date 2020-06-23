@@ -3,8 +3,11 @@ from src.pylo.Prolog import (
 )
 from src.pylo.language import Constant, Variable, Functor, Structure, List, Predicate, Literal, Negation, Clause, global_context
 import sys
-sys.path.append("../../build")
+
+#sys.path.append("../../build")
 import os
+wrap_path = os.path.abspath(os.path.dirname(__file__))
+sys.path.append(wrap_path + "/../../build")
 
 import pyxsb
 from typing import Union, Dict, Sequence
@@ -158,57 +161,111 @@ class XSBProlog(Prolog):
 
 
 if __name__ == '__main__':
-    pl = XSBProlog("/Users/seb/Documents/programs/XSB")
+    def test1():
+        pl = XSBProlog("/Users/seb/Documents/programs/XSB")
 
-    p = global_context.get_predicate("p", 2)
-    f = global_context.get_functor("t", 3)
-    f1 = p("a", "b")
+        p = global_context.get_predicate("p", 2)
+        f = global_context.get_functor("t", 3)
+        f1 = p("a", "b")
 
-    pl.assertz(f1)
+        pl.assertz(f1)
 
-    X = global_context.get_variable("X")
-    Y = global_context.get_variable("Y")
+        X = global_context.get_variable("X")
+        Y = global_context.get_variable("Y")
 
-    query = p(X, Y)
+        query = p(X, Y)
 
-    r = pl.has_solution(query)
-    print("has solution", r)
+        r = pl.has_solution(query)
+        print("has solution", r)
 
-    rv = pl.query(query)
-    print("all solutions", rv)
+        rv = pl.query(query)
+        print("all solutions", rv)
 
-    f2 = p("a", "c")
-    pl.assertz(f2)
+        f2 = p("a", "c")
+        pl.assertz(f2)
 
-    rv = pl.query(query)
-    print("all solutions after adding f2", rv)
+        rv = pl.query(query)
+        print("all solutions after adding f2", rv)
 
-    func1 = f(1, 2, 3)
-    f3 = p(func1, "b")
-    pl.assertz(f3)
+        func1 = f(1, 2, 3)
+        f3 = p(func1, "b")
+        pl.assertz(f3)
 
-    rv = pl.query(query)
-    print("all solutions after adding structure", rv)
+        rv = pl.query(query)
+        print("all solutions after adding structure", rv)
 
-    l = List([1, 2, 3, 4, 5])
+        l = List([1, 2, 3, 4, 5])
 
-    member = global_context.get_predicate("member", 2)
-    pl.use_module("lists", predicates=[member])
+        member = global_context.get_predicate("member", 2)
+        pl.use_module("lists", predicates=[member])
 
-    query2 = member(X, l)
+        query2 = member(X, l)
 
-    rv = pl.query(query2)
-    print("all solutions to list membership ", rv)
+        rv = pl.query(query2)
+        print("all solutions to list membership ", rv)
 
-    r = global_context.get_predicate("r", 2)
-    f4 = r("a", l)
-    f5 = r("a", "b")
+        r = global_context.get_predicate("r", 2)
+        f4 = r("a", l)
+        f5 = r("a", "b")
 
-    pl.asserta(f4)
-    pl.asserta(f5)
+        pl.asserta(f4)
+        pl.asserta(f5)
 
-    query3 = r(X, Y)
+        query3 = r(X, Y)
 
-    rv = pl.query(query3)
-    print("all solutions after adding list ", rv)
+        rv = pl.query(query3)
+        print("all solutions after adding list ", rv)
 
+        q = global_context.get_predicate("q", 2)
+        cl = (q("X", "Y") <= r("X", "Y") & r("X", "Z"))
+
+        pl.assertz(cl)
+        query4 = q("X", "Y")
+        rv = pl.query(query4)
+        print("all solutions to q: ", rv)
+
+
+    def test2():
+        pl = XSBProlog("/Users/seb/Documents/programs/XSB")
+
+        person = global_context.get_predicate("person", 1)
+        friends = global_context.get_predicate("friends", 2)
+        stress = global_context.get_predicate("stress", 1)
+        influences = global_context.get_predicate("influences", 2)
+        smokes = global_context.get_predicate("smokes", 1)
+        asthma = global_context.get_predicate("asthma", 1)
+
+        pl.assertz(person("a"))
+        pl.assertz(person("b"))
+        pl.assertz(person("c"))
+        pl.assertz(friends("a", "b"))
+        pl.assertz(friends("a", "c"))
+
+        pl.assertz(stress("X") <= person("X"))
+        pl.assertz(influences("X", "Y") <= person("X") & person("Y"))
+        pl.assertz(smokes("X") <= stress("X"))
+        pl.assertz(smokes("X") <= friends("X", "Y") & influences("Y", "X") & smokes("Y"))
+        pl.assertz(asthma("X") <= smokes("X"))
+
+        query_p = person("X")
+        tv = pl.query(query_p)
+        print("all persons: ", tv)
+
+        query_f = friends("X", "Y")
+        tv = pl.query(query_f)
+        print("all friends: ", tv)
+
+        query_st = stress("Y")
+        tv = pl.query(query_st)
+        print("all stressed people: ", tv)
+
+        tv = pl.query(influences("X", "Y"))
+        print("all influences: ", tv)
+
+        tv = pl.query(smokes("X"))
+        print("all smokers: ", tv)
+
+        tv = pl.query(asthma("X"))
+        print("all asthma: ", tv)
+
+    test1()

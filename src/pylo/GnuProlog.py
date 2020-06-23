@@ -195,7 +195,6 @@ class GNUProlog(Prolog):
     def use_module(self, module: str, **kwargs):
         raise Exception(f"GNUProlog does not have modules.")
 
-
     def _asserta_lit(self, literal: Literal):
         pl = _lit_to_pygp(literal)
         asa_p = pygprolog.pygp_Find_Atom("asserta")
@@ -246,9 +245,9 @@ class GNUProlog(Prolog):
 
     def assertz(self, clause: Union[Literal, Clause]):
         if isinstance(clause, Literal):
-            return self._asserta_lit(clause)
+            return self._assertz_lit(clause)
         else:
-            return self._asserta_cl(clause)
+            return self._assertz_cl(clause)
 
     def _retract_lit(self, literal: Literal):
         pl = _lit_to_pygp(literal)
