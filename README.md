@@ -90,7 +90,7 @@ Pylo allows you to conveniently specify the knowledge base and the query it with
 All basic constructs (constants, variables, functors and predicates) should be created using the `global_context`, which ensures that there are not duplicates. 
 
 ```python
-from pylo.engines.language import global_context, Literal, Clause, Conj, Structure, List, list_func
+from src.pylo import global_context, Literal, Clause, Conj, Structure, List, list_func
 
 # create some constants 
 luke = global_context.get_constant("luke")             
@@ -142,7 +142,7 @@ Pylo also provides many convenient shortcuts for less tedious construction of kn
 The above example could have been constructed in the following way
 
 ```python
-from pylo.engines.language import global_context, List
+from src.pylo import global_context, List
 
 # construct predicates
 father = global_context.get_predicate("father", 2)
@@ -180,9 +180,9 @@ rule2 = parent("X", "Y") <= mother("X", "Y")
 
 The first step is to create a Prolog instance
 ```python
-from pylo.engines.SWIProlog import SWIProlog
-from pylo.engines.XSBProlog import XSBProlog
-from pylo.engines.GnuProlog import GNUProlog
+from src.pylo import SWIProlog
+from src.pylo import XSBProlog
+from src.pylo import GNUProlog
 
 
 # Create GNU Prolog instance
@@ -202,7 +202,7 @@ Two things need to be noted:
  
 All Prolog engines have a unified interface:
 ```python
-from pylo.engines.Prolog import Prolog
+from src.pylo import Prolog
 pl = Prolog()
 
 # consult file
@@ -215,7 +215,7 @@ pl.consult("metagol.pl")
 #    for instance, GNU prolog does not have modules
 #                  XSB Prolog needs to specify which predicates to load frm the library, 
 #                               this is provided as an extra names arguments 'predicates', which takes a list of predicates
-pl.use_module("library(lists")
+pl.use_module("library(lists)")
 
 # asserta a fact or a clause
 pl.asserta()
@@ -240,8 +240,8 @@ pl.query()
 
 A more elaborate example
 ```python
-from pylo.engines.XSBProlog import XSBProlog
-from pylo.engines.language import global_context
+from src.pylo import XSBProlog
+from src.pylo import global_context
 
 pl = XSBProlog("/Users/seb/Documents/programs/XSB")
 

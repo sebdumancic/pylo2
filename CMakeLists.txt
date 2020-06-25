@@ -3,7 +3,7 @@ project(pylo)
 
 set(CMAKE_CXX_STANDARD 17)
 
-SET(SOURCE_DIR "pylo")
+SET(SOURCE_DIR "src/pylo")
 set(SOURCES "${SOURCE_DIR}/language.cpp")
 
 option(CIAO "Compile Ciao" OFF)

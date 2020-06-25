@@ -1,13 +1,13 @@
-from pylo.engines.Prolog import (
+from src.pylo import (
     Prolog
 )
-from pylo.engines.language import Constant, Variable, Functor, Structure, List, Predicate, Literal, Negation, Clause, \
+from src.pylo import Constant, Variable, Functor, Structure, List, Literal, Negation, Clause, \
     global_context
 import sys
-sys.path.append("../../build")
+sys.path.append("../../../build")
 
 import pygprolog
-from typing import Union, Dict, Sequence
+from typing import Union, Dict
 from functools import reduce
 
 

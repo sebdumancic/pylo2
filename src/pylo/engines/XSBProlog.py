@@ -1,16 +1,16 @@
-from pylo.engines.Prolog import (
+from src.pylo import (
     Prolog
 )
-from pylo.engines.language import Constant, Variable, Functor, Structure, List, Predicate, Literal, Negation, Clause, global_context
+from src.pylo import Variable, Structure, List, Literal, Clause, global_context
 import sys
 
 #sys.path.append("../../build")
 import os
 wrap_path = os.path.abspath(os.path.dirname(__file__))
-sys.path.append(wrap_path + "/../../build")
+sys.path.append(wrap_path + "/../../../build")
 
 import pyxsb
-from typing import Union, Dict, Sequence
+from typing import Union
 from functools import reduce
 
 
