@@ -47,8 +47,9 @@ if (GPROLOG)
     #target_link_libraries(pygprolog PUBLIC /usr/local/gprolog-1.4.5/lib/toplevel.o)
     #target_link_libraries(pygprolog PUBLIC /usr/local/gprolog-1.4.5/lib/toplevel_main.o)
     #target_link_libraries(pygprolog PUBLIC /Users/seb/Documents/programs/gprolog-1.4.5/pylo/libengine_fd.a)
+    target_compile_options(pygprolog PUBLIC -Wall -Wextra -pedantic -v -undefined dynamic_lookup -fPIC)
 
-add_compile_options(-Wall -Wextra -pedantic -v -undefined dynamic_lookup -fPIC)
+#add_compile_options(-Wall -Wextra -pedantic -v -undefined dynamic_lookup -fPIC)
 endif(GPROLOG)
 
 # XSB PROLOG
@@ -65,7 +66,8 @@ if(XSBPROLOG)
     link_libraries(pyxsb PUBLIC "${XSB_FULL_DIR}/saved.o")
     #target_link_libraries(pyxsb PUBLIC "${XSB_HOME_DIR}/config/i386-apple-darwin18.7.0/saved.o/xsb.o")
     target_link_libraries(pyxsb PUBLIC "${XSB_FULL_DIR}/saved.o/xsb.o")
-    add_compile_options(-O3 -fno-strict-aliasing -v -undefined dynamic_lookup -fPIC -Wall -pipe )
+    #add_compile_options(-O3 -fno-strict-aliasing -v -undefined dynamic_lookup -fPIC -Wall -pipe )
+    target_compile_options(pyxsb PUBLIC -O3 -fno-strict-aliasing -v -undefined dynamic_lookup -fPIC -Wall -pipe)
 endif(XSBPROLOG)
 
 if(SWIPL)

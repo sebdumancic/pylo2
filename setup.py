@@ -91,6 +91,10 @@ class CMakeBuild(build_ext):
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
 
+        swipl_build_dir = self.build_temp + "_swipl"
+        if not os.path.exists(swipl_build_dir):
+            os.makedirs(swipl_build_dir)
+
         if build_gnu:
             subprocess.check_call(['cmake', ext.sourcedir] + cmake_args + ['-DGPROLOG=ON'],
                                   cwd=self.build_temp, env=env)
@@ -107,10 +111,10 @@ class CMakeBuild(build_ext):
 
         if build_swi:
             subprocess.check_call(['cmake', ext.sourcedir] + cmake_args + ['-DSWIPL=ON'],
-                                  cwd=self.build_temp, env=env)
+                                  cwd=swipl_build_dir, env=env)
 
             subprocess.check_call(['cmake', '--build', '.'] + build_args,
-                                  cwd=self.build_temp)
+                                  cwd=swipl_build_dir)
 
         print()
 
@@ -129,7 +133,7 @@ setuptools.setup(name='pylo',
                  url="https://github.com/sebdumancic/pylo2",
                  packages=setuptools.find_packages('src'),
                  package_dir={'':'src'},
-                 ext_modules=[CMakeExtension('pylo/pylo')],
+                 ext_modules=[CMakeExtension('pylo')],
                  cmdclass=dict(build_ext=CMakeBuild),
                  python_requires=">=3.6"
                  )
