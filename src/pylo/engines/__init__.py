@@ -1,15 +1,26 @@
-from .language import Term, Constant, Variable, Structure, Predicate, Functor, List, Literal, Negation, Clause
-#from .GnuProlog import GNUProlog
+
+engines = []
+try:
+    from .GnuProlog import GNUProlog
+    engines += ['GNUProlog']
+except Exception:
+    pass
+
+try:
+    from .XSBProlog import XSBProlog
+    engines += ['XSBProlog']
+except Exception:
+    pass
+
+try:
+    from .SWIProlog import SWIProlog
+    engines += ['SWIProlog']
+except Exception:
+    pass
+
 
 __all__ = [
-    'Term',
-    'Constant',
-    'Variable',
-    'Structure',
-    'Predicate',
-    'Functor',
-    'List',
-    'Literal',
-    'Negation',
-    'Clause'
+    'GnuProlog',
+    'XSBProlog',
+    'SWIProlog'
 ]
