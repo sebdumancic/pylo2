@@ -20,12 +20,50 @@ Maybe supported in the future:
 
 # Installation
 
+## Installation with pip
+
+**STEP 1:** Pylo relies on ENV variables to detect which Prolog engines to support.
+The desired Prolog engines need to be installed first.
+
+To install the support for **GNU Prolog**, you need to provide the `GNUPROLOG_HOME` variable pointing to the installation folder of GNU Prolog:
+```shell script
+# For OSX with default configuration
+export GNU_LIB_PATH=/usr/local/gprolog-1.4.5
+```
+
+To install the support for **XSB_PROLOG**, you need to provide `XSB_HOME` variable pointing to the source of XSB Prolog.
+This is the folder in which you unpacked the XSB source files.
+
+To install the support for **SWI Prolog**, you need to provide `SWIPL_HOME` variable pointing to the installation folder of SWIPL:
+```shell script
+# on OSX, installed from sources
+export SWIPL_LIB_PATH=/usr/local/Cellar/swi-prolog/8.2.0/libexec/lib/swipl/lib/x86_64-darwin
+```
+
+
+**STEP 2:** Clone this repository.
+
+
+**STEP 3:** Move to the folder you cloned the repository to.
+Execute
+```shell script
+pip install --verbose .
+```
+or
+```shell script
+python setup.py install
+```
+
+That's it! You should be able to use Pylo now.
+
+
+
 ## Manual
 
-Pylo relies on ENV variables to configure identify the needed libraries.
+**STEP 1:** Pylo relies on ENV variables to configure identify the needed libraries.
 
 To install the support for **GNU Prolog**, you need to provide the path to the GNu-prolog's installation folder through the `GNU_LIB_PATH`.
-For instance, using the default installation on OSC results in the following path
+For instance, using the default installation on OSX results in the following path
 ```shell script
 export GNU_LIB_PATH=/usr/local/gprolog-1.4.5
 ``` 
@@ -47,7 +85,7 @@ export SWIPL_LIB_PATH=/usr/local/Cellar/swi-prolog/8.2.0/libexec/lib/swipl/lib/x
 ``` 
 
 
-Once the environment variables have been setup, you can install `pylo` (and the desired Prolog engines) with the following commands
+**STEP 2:** Once the environment variables have been setup, you can install `pylo` (and the desired Prolog engines) with the following commands
 
 ```shell script
 mkdir build
@@ -65,7 +103,8 @@ The takes the following form:
 If you want to build the support for several Prolog engines, you have to compile the engines separately (with only one flag specified at the time).
 
 
-Once the compilation is done, make sure that the `build` folder is accessible through the `PATH` and `PYTHONPATH` variables.
+**STEP 3:** Once the compilation is done, make sure that the `build` folder is accessible through the `PATH` and `PYTHONPATH` variables.
+
 
 
 
