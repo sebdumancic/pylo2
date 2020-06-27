@@ -129,7 +129,7 @@ Pylo allows you to conveniently specify the knowledge base and the query it with
 All basic constructs (constants, variables, functors and predicates) should be created using the `global_context`, which ensures that there are not duplicates. 
 
 ```python
-from src.pylo import global_context, Literal, Clause, Conj, Structure, List, list_func
+from pylo import global_context, Literal, Clause, Conj, Structure, List, list_func
 
 # create some constants 
 luke = global_context.get_constant("luke")             
@@ -181,7 +181,7 @@ Pylo also provides many convenient shortcuts for less tedious construction of kn
 The above example could have been constructed in the following way
 
 ```python
-from src.pylo import global_context, List
+from pylo import global_context, List
 
 # construct predicates
 father = global_context.get_predicate("father", 2)
@@ -219,9 +219,9 @@ rule2 = parent("X", "Y") <= mother("X", "Y")
 
 The first step is to create a Prolog instance
 ```python
-from src.pylo import SWIProlog
-from src.pylo import XSBProlog
-from src.pylo import GNUProlog
+from pylo.engines import SWIProlog
+from pylo.engines import XSBProlog
+from pylo.engines import GNUProlog
 
 
 # Create GNU Prolog instance
@@ -241,7 +241,7 @@ Two things need to be noted:
  
 All Prolog engines have a unified interface:
 ```python
-from src.pylo import Prolog
+from pylo import Prolog
 pl = Prolog()
 
 # consult file
@@ -279,8 +279,8 @@ pl.query()
 
 A more elaborate example
 ```python
-from src.pylo import XSBProlog
-from src.pylo import global_context
+from pylo.engines import XSBProlog
+from pylo import global_context
 
 pl = XSBProlog("/Users/seb/Documents/programs/XSB")
 
@@ -332,5 +332,5 @@ print("all asthma: ", tv)
  - [ ] remember all created variables, so that they can be properly bound to the objects in the language
  - [ ] providing python functions as predicates
  - [ ] documentation
-   - [ ] high-level engine
+   - [x] high-level engine
    - [ ] low-level primitives 
