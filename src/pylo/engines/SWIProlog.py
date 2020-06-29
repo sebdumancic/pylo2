@@ -218,6 +218,19 @@ def _swipy_to_string(term):
     return swipy.swipy_get_string_chars(term)
 
 
+def _swipy_to_var(term, swipy_term_to_var: Dict[int, Variable]):
+    if term in swipy_term_to_var:
+        return swipy_term_to_var[term]
+    else:
+        all_var_names = set([x.get_name() for x in swipy_term_to_var.values()])
+        new_name = [chr(x) for x in range(ord('A'), ord('Z') + 1) if chr(x) not in all_var_names][0]
+        if len(new_name) == 0:
+            new_name = [f"{chr(x)}{chr(y)}" for x in range(ord('A'), ord('Z')+1) for y in range(ord('A'), ord('Z')+1) if f"{chr(x)}{chr(y)}" not in all_var_names]
+        new_var = Variable(new_name)
+        swipy_term_to_var[term] = new_var
+        return new_var
+
+
 def _swipy_to_list(term):
     elements = []
     list = swipy.swipy_copy_term_ref(term)
@@ -245,7 +258,7 @@ def _swipy_to_structure(term):
     return functor(*structure_elements)
 
 
-def _read_swipy(term):
+def _read_swipy(term, swipy_term_to_var={}):
     if swipy.swipy_is_atom(term):
         return _swipy_to_const(term)
     elif swipy.swipy_is_string(term):
@@ -261,7 +274,7 @@ def _read_swipy(term):
     elif swipy.swipy_is_compound(term):
         return _swipy_to_structure(term)
     elif swipy.swipy_is_variable(term):
-        raise Exception(f"reading variables not supported yet!")
+        return _swipy_to_var(term, swipy_term_to_var)
     else:
         raise Exception(f"Unknown term type {swipy.swipy_term_type(term)}")
 
@@ -431,13 +444,14 @@ class SWIProlog(Prolog):
         r = swipy.swipy_next_solution(query)
 
         all_solutions = []
+        var_index_var = dict([(var_store[v], v) for v in var_store])
 
         while r and max_solutions != 0:
             max_solutions -= 1
 
             tmp_solution = {}
             for var in var_store:
-                tmp_solution[var] = _read_swipy(var_store[var])
+                tmp_solution[var] = _read_swipy(var_store[var], swipy_term_to_var=var_index_var)
 
             all_solutions.append(tmp_solution)
             r = swipy.swipy_next_solution(query)

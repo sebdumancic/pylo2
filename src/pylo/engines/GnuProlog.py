@@ -155,14 +155,20 @@ def _pygp_to_structure(term):
     return Structure(global_context.get_functor(functor, arity), args)
 
 
-def _read_pygp(term, vars_already_created=set()):
+def _read_pygp(term, pygp_term_to_var={}):
     term_type = pygprolog.pygp_Type_Of_Term(term)
 
     if term_type == 1:
-        import string
-        all_names = [x for x in string.ascii_uppercase if x not in vars_already_created][0]
-        # global global_context
-        return global_context.get_variable(all_names)
+        if term in pygp_term_to_var:
+            return pygp_term_to_var[term]
+        else:
+            all_var_names = set([x.get_name() for x in pygp_term_to_var.values()])
+            new_name = [chr(x) for x in range(ord('A'), ord('Z') + 1) if chr(x) not in all_var_names][0]
+            if len(new_name) == 0:
+                new_name = [f"{chr(x)}{chr(y)}" for x in range(ord('A'), ord('Z')+1) for y in range(ord('A'), ord('Z')+1) if f"{chr(x)}{chr(y)}" not in all_var_names]
+            return Variable(new_name)
+            # global global_context
+            # return global_context.get_variable(all_names)
     elif term_type == 3 or term_type == 4:
         return _pygp_to_number(term)
     elif term_type == 5:

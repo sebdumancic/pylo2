@@ -307,6 +307,17 @@ class Context:
 
         return self._vars[name]
 
+    def get_fresh_variable(self, save=False):
+        name = [chr(x) for x in range(ord('A'), ord('Z')+1) if chr(x) not in self._vars][0]
+        if len(name) == 0:
+            name = [f"{chr(x)}{chr(y)}" for x in range(ord('A'), ord('Z') + 1) for y in range(ord('A'), ord('Z') + 1) if chr(x) not in self._vars][0]
+        var = Variable(name)
+
+        if save:
+            self._vars[name] = var
+
+        return var
+
     def get_functor(self, name: str, arity: int):
         if name not in self._functors:
             self._functors[name] = {}
