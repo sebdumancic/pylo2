@@ -101,7 +101,7 @@ PYBIND11_MODULE(swipy, m)
             py::list l;
             atom_t name;
             size_t ar;
-            PL_get_name_arity(t, &name, &ar);
+            PL_get_name_arity_sz(t, &name, &ar);
             l.append(name);
             l.append(ar);
             return l;
@@ -110,7 +110,7 @@ PYBIND11_MODULE(swipy, m)
         py::list l;
         atom_t name;
         size_t ar;
-        PL_get_compound_name_arity(t, &name, &ar);
+        PL_get_compound_name_arity_sz(t, &name, &ar);
         l.append(name);
         l.append(ar);
         return l;
