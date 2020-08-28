@@ -1,13 +1,14 @@
 from abc import ABC
 from typing import Sequence, Union
+import typing
 
 
 class Term(ABC):
 
-    def __init__(self, name):
-        self._name = name
+    def __init__(self, name: str):
+        self._name: str = name
 
-    def get_name(self):
+    def get_name(self) -> str:
         return self._name
 
     def __eq__(self, other):
@@ -40,13 +41,13 @@ class Variable(Term):
 class Functor:
 
     def __init__(self, name: str, arity: int):
-        self._name = name
-        self._arity = arity
+        self._name: str = name
+        self._arity: int = arity
 
-    def get_name(self):
+    def get_name(self) -> str:
         return self._name
 
-    def get_arity(self):
+    def get_arity(self) -> int:
         return self._arity
 
     def __eq__(self, other):
@@ -61,9 +62,10 @@ class Functor:
     def __repr__(self):
         return self._name
 
-    def __call__(self, *args):
+    def __call__(self, *args: Union[str, "Constant", "Variable", "Structure", "List", int, float]) -> "Structure":
         args_to_use = []
         global global_context
+        elem: Union[str, "Constant", "Variable", "Structure", "List", int, float]
         for elem in args:
             if isinstance(elem, str) and elem.islower():
                 args_to_use.append(global_context.get_constant(elem))
@@ -79,15 +81,15 @@ class Functor:
 
 class Structure(Term):
 
-    def __init__(self, functor: Functor, args: Sequence[Union[Term, int, float]]):
-        self._functor = functor
-        self._args = args
+    def __init__(self, functor: "Functor", args: Sequence[Union[Term, int, float]]):
+        self._functor: Functor = functor
+        self._args: Sequence[Union[Term, int, float]] = args
         super().__init__(name=functor.get_name())
 
-    def get_functor(self):
+    def get_functor(self) -> Functor:
         return self._functor
 
-    def get_arguments(self):
+    def get_arguments(self) -> Sequence[Union[Term, int, float]]:
         return self._args
 
     def __eq__(self, other):
@@ -133,13 +135,13 @@ class List(Structure):
 class Predicate:
 
     def __init__(self, name: str, arity: int):
-        self._name = name
-        self._arity = arity
+        self._name: str = name
+        self._arity: int = arity
 
-    def get_name(self):
+    def get_name(self) -> str:
         return self._name
 
-    def get_arity(self):
+    def get_arity(self) -> int:
         return self._arity
 
     def __eq__(self, other):
@@ -154,9 +156,10 @@ class Predicate:
     def __repr__(self):
         return self._name
 
-    def __call__(self, *args):
+    def __call__(self, *args: Union[str, "Constant", "Variable", "Structure", "Predicate", int, float]) -> "Literal":
         argsToUse = []
         # global global_context
+        elem: Union[str, "Constant", "Variable", "Structure", "Predicate", int, float]
         for elem in args:
             if isinstance(elem, str) and elem.isdigit():
                 if '.' in elem:
@@ -181,28 +184,28 @@ class Literal:
 
     def __init__(self, predicate: Predicate, args: Sequence[Union[Term, int, float]]):
         self._predicate = predicate
-        self._args = args
+        self._args: Sequence[Union[Term, int, float]] = args
 
-    def get_predicate(self):
+    def get_predicate(self) -> Predicate:
         return self._predicate
 
-    def get_arguments(self):
+    def get_arguments(self) -> Sequence[Union[Term, int, float]]:
         return self._args
 
-    def __and__(self, other: Union["Literal", "Negation"]):
+    def __and__(self, other: Union["Literal", "Negation"]) -> "Conj":
         return Conj(self, other)
 
-    def __le__(self, other: Union["Literal", "Negation", "Conj"]):
+    def __le__(self, other: Union["Literal", "Negation", "Conj"]) -> "Clause":
         if isinstance(other, (Literal, Negation)):
             return Clause(self, Conj(other))
         else:
             return Clause(self, other)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, Literal):
-            return self._predicate == other._predicate and\
-                    len(self._args) == len(other._args) and\
-                    all([x == y for x, y in zip(self._args, other._args)])
+            return self._predicate == other._predicate and \
+                   len(self._args) == len(other._args) and \
+                   all([x == y for x, y in zip(self._args, other._args)])
         else:
             return False
 
@@ -216,12 +219,12 @@ class Literal:
 class Negation:
 
     def __init__(self, literal: Literal):
-        self._lit = literal
+        self._lit: Literal = literal
 
-    def get_literal(self):
+    def get_literal(self) -> "Literal":
         return self._lit
 
-    def __and__(self, other: Union["Literal", "Negation"]):
+    def __and__(self, other: Union["Literal", "Negation"]) -> "Conj":
         return Conj(self, other)
 
     def __eq__(self, other):
@@ -236,16 +239,16 @@ class Negation:
 
 class Conj:
 
-    def __init__(self, *lits):
-        self._lits = list(lits)
+    def __init__(self, *lits: Union["Literal", "Negation"]):
+        self._lits: typing.List[Union["Literal", "Negation"]] = list(lits)
 
-    def get_literals(self):
+    def get_literals(self) -> typing.List[Union["Literal", "Negation"]]:
         return self._lits
 
     def __repr__(self):
         return ",".join([str(x) for x in self._lits])
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, Conj):
             return all([x == y for x, y in zip(self._lits, other._lits)])
         else:
@@ -254,25 +257,26 @@ class Conj:
     def __hash__(self):
         return hash(str(self))
 
-    def __and__(self, other: Union["Literal", "Negation", "Conj"]):
+    def __and__(self, other: Union["Literal", "Negation", "Conj"]) -> "Conj":
         if isinstance(other, (Literal, Negation)):
             self._lits += [other]
         elif isinstance(other, Conj):
             self._lits += other.get_literals()
         else:
             raise Exception(f"Don't know how to add object of type {type(other)} to Conj")
+        return self
 
 
 class Clause:
 
     def __init__(self, head: Literal, body: Conj):
-        self._head = head
-        self._body = body
+        self._head: Literal = head
+        self._body: Conj = body
 
-    def get_head(self):
+    def get_head(self) -> Literal:
         return self._head
 
-    def get_body(self):
+    def get_body(self) -> Conj:
         return self._body
 
     def __and__(self, other: Union["Literal", "Negation", "Conj"]):
@@ -308,9 +312,10 @@ class Context:
         return self._vars[name]
 
     def get_fresh_variable(self, save=False):
-        name = [chr(x) for x in range(ord('A'), ord('Z')+1) if chr(x) not in self._vars][0]
+        name = [chr(x) for x in range(ord('A'), ord('Z') + 1) if chr(x) not in self._vars][0]
         if len(name) == 0:
-            name = [f"{chr(x)}{chr(y)}" for x in range(ord('A'), ord('Z') + 1) for y in range(ord('A'), ord('Z') + 1) if chr(x) not in self._vars][0]
+            name = [f"{chr(x)}{chr(y)}" for x in range(ord('A'), ord('Z') + 1) for y in range(ord('A'), ord('Z') + 1) if
+                    chr(x) not in self._vars][0]
         var = Variable(name)
 
         if save:
