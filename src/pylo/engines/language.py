@@ -33,7 +33,7 @@ class Constant(Term):
     def __init__(self, name: str):
         if len(name) == 0:
             raise InputError('empty Constant')
-        assert name[0].isdigit() or name[0].islower(), f"Constants should be name with lowercase {name}"
+        assert name[0].isdigit() or name[0].islower() or isinstance(name, float), f"Constants should be name with lowercase {name}"
         super().__init__(name)
 
 
