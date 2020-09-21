@@ -31,7 +31,7 @@ class Term(ABC):
 def is_float(value):
     try:
         float(value)
-	return True
+        return True
     except ValueError:
         return False
 
