@@ -1,9 +1,14 @@
-from src.pylo import (
-    Prolog
-)
-from src.pylo import Constant, Variable, Functor, Structure, List, Predicate, Literal, Negation, Clause, \
-    global_context
+# from src.pylo import (
+#     Prolog
+# )
+# from src.pylo import Constant, Variable, Functor, Structure, List, Predicate, Literal, Negation, Clause, \
+#     global_context
+from .Prolog import Prolog
+from .language import Constant, Variable, Functor, Structure, Predicate, List, Literal, Negation, Conj, Clause, \
+    global_context, list_func
+import typing
 import sys
+
 sys.path.append("../../../build")
 
 import swipy
@@ -175,17 +180,21 @@ def _conjoin_literals(lits: Sequence[int]):
         compound_arg = swipy.swipy_new_term_refs(2)
         conj = swipy.swipy_new_term_ref()
         swipy.swipy_put_term(compound_arg, lits[0])
-        swipy.swipy_put_term(compound_arg+1, _conjoin_literals(lits[1:]))
+        swipy.swipy_put_term(compound_arg + 1, _conjoin_literals(lits[1:]))
         swipy.swipy_cons_functor(conj, conj_functor, compound_arg)
 
         return conj
 
 
 def _cl_to_swipy(clause: Clause, lit_var_store: Dict[Variable, int]):
-    body = clause.get_body().get_literals()
-    head = clause.get_head()
+    body: typing.List[Literal] = clause.get_body().get_literals()
+    head: Literal = clause.get_head()
 
-    body = [_lit_to_swipy(x, lit_var_store) if isinstance(x, Literal) else _neg_to_swipy(x, lit_var_store) for x in body]
+    body: typing.List[int] = [_lit_to_swipy(x, lit_var_store)
+                              if isinstance(x, Literal)
+                              else _neg_to_swipy(x, lit_var_store)
+                              for x in body]
+
     head = _lit_to_swipy(head, lit_var_store)
     body = _conjoin_literals(body)
 
@@ -195,7 +204,7 @@ def _cl_to_swipy(clause: Clause, lit_var_store: Dict[Variable, int]):
     entire_clause = swipy.swipy_new_term_ref()
     compound_arg = swipy.swipy_new_term_refs(2)
     swipy.swipy_put_term(compound_arg, head)
-    swipy.swipy_put_term(compound_arg+1, body)
+    swipy.swipy_put_term(compound_arg + 1, body)
     swipy.swipy_cons_functor(entire_clause, clause_functor, compound_arg)
 
     return entire_clause
@@ -225,7 +234,8 @@ def _swipy_to_var(term, swipy_term_to_var: Dict[int, Variable]):
         all_var_names = set([x.get_name() for x in swipy_term_to_var.values()])
         new_name = [chr(x) for x in range(ord('A'), ord('Z') + 1) if chr(x) not in all_var_names][0]
         if len(new_name) == 0:
-            new_name = [f"{chr(x)}{chr(y)}" for x in range(ord('A'), ord('Z')+1) for y in range(ord('A'), ord('Z')+1) if f"{chr(x)}{chr(y)}" not in all_var_names]
+            new_name = [f"{chr(x)}{chr(y)}" for x in range(ord('A'), ord('Z') + 1) for y in
+                        range(ord('A'), ord('Z') + 1) if f"{chr(x)}{chr(y)}" not in all_var_names]
         new_var = Variable(new_name)
         swipy_term_to_var[term] = new_var
         return new_var
@@ -292,7 +302,7 @@ class SWIProlog(Prolog):
 
     def consult(self, filename: str):
         string_term = swipy.swipy_new_term_ref()
-        swipy.swipy_put_string_chars(string_term,  filename)
+        swipy.swipy_put_string_chars(string_term, filename)
 
         consult_pred = swipy.swipy_predicate("consult", 1, None)
         query = swipy.swipy_open_query(consult_pred, string_term)
@@ -347,7 +357,7 @@ class SWIProlog(Prolog):
 
         return r
 
-    def assertz(self, clause):
+    def assertz(self, clause: Union[Literal, Clause]):
         var_store = {}
         if isinstance(clause, Literal):
             swipl_object = _lit_to_swipy(clause, var_store)
@@ -380,7 +390,7 @@ class SWIProlog(Prolog):
             query_args = swipy.swipy_new_term_refs(query.get_predicate().get_arity())
 
             for ind, arg in enumerate(query.get_arguments()):
-                _to_swipy_ref(arg, query_args+ind, var_store)
+                _to_swipy_ref(arg, query_args + ind, var_store)
 
             pred = swipy.swipy_predicate(predicate_name, query.get_predicate().get_arity(), None)
             query = swipy.swipy_open_query(pred, query_args)
@@ -389,13 +399,14 @@ class SWIProlog(Prolog):
 
             return True if r else False
         else:
-            swipy_objs = [_lit_to_swipy(x, var_store) if isinstance(x, Literal) else _neg_to_swipy(x, var_store) for x in query]
+            swipy_objs = [_lit_to_swipy(x, var_store) if isinstance(x, Literal) else _neg_to_swipy(x, var_store) for x
+                          in query]
             first = swipy_objs[0]
             rest = _conjoin_literals(swipy_objs[1:])
 
             compound_arg = swipy.swipy_new_term_refs(2)
             swipy.swipy_put_term(compound_arg, first)
-            swipy.swipy_put_term(compound_arg+1, rest)
+            swipy.swipy_put_term(compound_arg + 1, rest)
 
             predicate = swipy.swipy_predicate(",", 2, None)
             query = swipy.swipy_open_query(predicate, compound_arg)
@@ -425,18 +436,19 @@ class SWIProlog(Prolog):
             query_args = swipy.swipy_new_term_refs(query.get_predicate().get_arity())
 
             for ind, arg in enumerate(query.get_arguments()):
-                _to_swipy_ref(arg, query_args+ind, var_store)
+                _to_swipy_ref(arg, query_args + ind, var_store)
 
             pred = swipy.swipy_predicate(predicate_name, query.get_predicate().get_arity(), None)
             query = swipy.swipy_open_query(pred, query_args)
         else:
-            swipy_objs = [_lit_to_swipy(x, var_store) if isinstance(x, Literal) else _neg_to_swipy(x, var_store) for x in query]
+            swipy_objs = [_lit_to_swipy(x, var_store) if isinstance(x, Literal) else _neg_to_swipy(x, var_store) for x
+                          in query]
             first = swipy_objs[0]
             rest = _conjoin_literals(swipy_objs[1:])
 
             compound_arg = swipy.swipy_new_term_refs(2)
             swipy.swipy_put_term(compound_arg, first)
-            swipy.swipy_put_term(compound_arg+1, rest)
+            swipy.swipy_put_term(compound_arg + 1, rest)
 
             predicate = swipy.swipy_predicate(",", 2, None)
             query = swipy.swipy_open_query(predicate, compound_arg)
@@ -514,15 +526,3 @@ if __name__ == '__main__':
 
     rv = pl.query(query3)
     print("all solutions after adding list ", rv)
-
-
-
-
-
-
-
-
-
-
-
-
