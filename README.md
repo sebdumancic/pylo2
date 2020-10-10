@@ -8,6 +8,7 @@ Supported Prolog engines:
  - [XSB Prolog](http://xsb.sourceforge.net/) 
  
 Under development:
+ - [ ] [ECLiPSe](http://eclipseclp.org/) and its [Python interface](http://pyclp.sourceforge.net/)
  - [ ] [Ciao Prolog](https://ciao-lang.org/) and its [C interface](https://ciao-lang.org/ciao/build/doc/ciao.html/foreign_interface_doc.html)
  - [ ] [TauProlog](http://tau-prolog.org/)  (with [pyv8](https://code.google.com/archive/p/pyv8/)) 
  
@@ -17,6 +18,10 @@ Maybe supported in the future:
   - [ ] [FASSIL](https://dectau.uclm.es/fasill/)
   - [ ] [Bousi Prolog](https://dectau.uclm.es/bousi-prolog/)
 
+
+# Supported system
+
+The library was tested on Linux (Ubuntu) and OSX.
 
 # Installation
 
@@ -329,8 +334,10 @@ print("all asthma: ", tv)
 
 # Missing features
 
- - [ ] remember all created variables, so that they can be properly bound to the objects in the language
+ - [x] remember all created variables, so that they can be properly bound to the objects in the language
  - [ ] providing python functions as predicates
+ - [ ] remove `global_context`
+ - [ ] support for pairs (`[|]/2` or `./2`)
  - [ ] documentation
    - [x] high-level engine
    - [ ] low-level primitives 
