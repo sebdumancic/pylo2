@@ -108,6 +108,14 @@ class Structure(Term):
 
 list_func = Functor(".", 2)
 
+# Swipl uses '[|]' as the functor for lists
+# GNU PRolog uses '.' as the list functor
+# XSB uses '.' as the list functor
+
+# list conventions
+#    -  [...] is a list in which empty list as the last element is implicitly assumed
+#    -  if the user wants a something list [a|Y] (no empty list at the end), it has to explicitly construct it with pairs
+
 
 class List(Structure):
 

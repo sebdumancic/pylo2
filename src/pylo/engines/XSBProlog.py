@@ -159,6 +159,9 @@ class XSBProlog(Prolog):
 
         return all_solutions
 
+    def register_foreign(self, pyfunction, arity):
+        raise Exception("support for foreign predicates not supported yet")
+
 
 if __name__ == '__main__':
     def test1():

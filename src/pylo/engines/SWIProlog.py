@@ -9,6 +9,7 @@ sys.path.append("../../../build")
 import swipy
 from typing import Union, Dict, Sequence
 from functools import reduce
+import ctypes
 
 
 def _const_to_swipy(const: Constant):
@@ -285,6 +286,9 @@ class SWIProlog(Prolog):
         if exec_path is None:
             exec_path = "/usr/local/bin/swipl"
         swipy.swipy_init(exec_path)
+        self._callback_arities = {}
+        self._wrapped_functions = {}
+        self._wrap_refs_to_keep = []
         super(SWIProlog, self).__init__()
 
     def __del__(self):
@@ -460,6 +464,41 @@ class SWIProlog(Prolog):
 
         return all_solutions
 
+    def _callback(self, arity):
+        res = self._callback_arities.get(arity)
+        if res is None:
+            args = [ctypes.c_uint64] + [ctypes.c_uint64]*arity
+            res = ctypes.CFUNCTYPE(*args)
+            self._callback_arities[arity] = res
+
+        return res
+
+    def _foreign_wrapper(self, pyfunction):
+        res = self._wrapped_functions.get(pyfunction)
+        if res is None:
+            def wrapper(*args):
+                swipy_term_to_var = {}
+                args = [_read_swipy(x, swipy_term_to_var) for x in args]
+                print(f"function {pyfunction.__name__} with args: {args}")
+                # TODO: pyfunction should take the original args as input in order to give the ability to put something in variables
+                r = pyfunction(*args)
+                return (r is None) and True or r
+
+            res = wrapper
+            self._wrapped_functions[pyfunction] = res
+
+        return res
+
+    def register_foreign(self, pyfunction, arity):
+        cwrap = self._callback(arity)
+        fwrap = self._foreign_wrapper(pyfunction)
+        fwrap2 = cwrap(fwrap)
+        self._wrap_refs_to_keep.append(fwrap2)
+
+        res = swipy.swipy_register_foreign(pyfunction.__name__, arity, fwrap2, 0)
+
+        return global_context.get_predicate(pyfunction.__name__, arity)
+
 
 if __name__ == '__main__':
     pl = SWIProlog()
@@ -514,6 +553,19 @@ if __name__ == '__main__':
 
     rv = pl.query(query3)
     print("all solutions after adding list ", rv)
+
+    # Foreign predicates
+
+    def hello(t):
+        print("Foreign: Hello", t)
+
+    hello_pred = pl.register_foreign(hello, 1)
+    # print(hello_pred)
+
+    f_query = hello_pred("a")
+
+    pl.has_solution(f_query)
+
 
 
 

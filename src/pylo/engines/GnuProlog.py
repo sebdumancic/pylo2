@@ -358,6 +358,9 @@ class GNUProlog(Prolog):
 
         return all_solutions
 
+    def register_foreign(self, pyfunction, arity):
+        raise Exception("support for foreign predicate not implemented yet")
+
 
 if __name__ == '__main__':
     pl = GNUProlog()

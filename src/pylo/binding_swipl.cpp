@@ -3,6 +3,7 @@
 //
 
 #include <pybind11/pybind11.h>  // has to be the first include, otherwise it doesn't compile
+#include <pybind11/functional.h>
 #include "SWI-Prolog.h"
 #include <string.h>
 #include <iostream>
@@ -10,6 +11,13 @@
 
 using namespace std;
 namespace py = pybind11;
+
+foreign_t hello(term_t arg, int arity) {
+    char *ar;
+    PL_get_atom_chars(arg, &ar);
+    cout << "Foreign: Hello " << ar << "\n";
+    return TRUE;
+}
 
 PYBIND11_MODULE(swipy, m)
 {
@@ -163,5 +171,12 @@ PYBIND11_MODULE(swipy, m)
     m.def("swipy_next_solution", &PL_next_solution, "go to the next solution");
     m.def("swipy_cut_query", &PL_cut_query, "cut the query");
     m.def("swipy_close_query", &PL_close_query, "close the query");
+
+    // foreign predicate
+    m.def("swipy_register_foreign", [](const string& name, int arity, py::object pyf, int flags) {
+        char *fname = const_cast<char *>(name.c_str());
+
+        return PL_register_foreign("hello", 1, (void *) hello, 0);
+        }, "registers C functions as a predicate");
 
 }
