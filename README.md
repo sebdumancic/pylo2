@@ -32,8 +32,10 @@ The desired Prolog engines need to be installed first.
 
 To install the support for **GNU Prolog**, you need to provide the `GNUPROLOG_HOME` variable pointing to the installation folder of GNU Prolog:
 ```shell script
-# For OSX with default configuration
+# For OSX with default configuration (installed from sources)
 export GNUPROLOG_HOME=/usr/local/gprolog-1.4.5
+# On Ubuntu
+export GNUPROLOG_HOMe=/usr/lib/gprolog-1.4.5
 ```
 
 To install the support for **XSB_PROLOG**, you need to provide `XSB_HOME` variable pointing to the source of XSB Prolog.
@@ -41,8 +43,10 @@ This is the folder in which you unpacked the XSB source files.
 
 To install the support for **SWI Prolog**, you need to provide `SWIPL_HOME` variable pointing to the installation folder of SWIPL:
 ```shell script
-# on OSX, installed from sources
-export SWIPL_HOME=/usr/local/Cellar/swi-prolog/8.2.0/libexec/lib/swipl/lib/x86_64-darwin
+# on OSX, (installed from Homebrew)
+export SWIPL_HOME=/usr/local/Cellar/swi-prolog/8.2.0/libexec/lib/swipl
+# On Ubuntu
+export SWIPL_HOME=/usr
 ```
 
 
