@@ -40,12 +40,16 @@ export GNUPROLOG_HOMe=/usr/lib/gprolog-1.4.5
 
 To install the support for **XSB_PROLOG**, you need to provide `XSB_HOME` variable pointing to the source of XSB Prolog.
 This is the folder in which you unpacked the XSB source files.
+For example
+```shell script
+export XSB_HOME=/Users/user/Documents/programs/XSB
+```
 
 To install the support for **SWI Prolog**, you need to provide `SWIPL_HOME` variable pointing to the installation folder of SWIPL:
 ```shell script
 # on OSX, (installed from Homebrew)
 export SWIPL_HOME=/usr/local/Cellar/swi-prolog/8.2.0/libexec/lib/swipl
-# On Ubuntu
+# On Ubuntu, installed from the repository
 export SWIPL_HOME=/usr
 ```
 
@@ -64,6 +68,15 @@ python setup.py install
 ```
 
 That's it! You should be able to use Pylo now.
+
+
+**STEP 4 (optional):** Test
+Navigate to the `testpy` folder and test the library:
+```shell script
+python test_gprolog.py
+python test_swipy.py
+python test_xsb.py
+```
 
 
 
