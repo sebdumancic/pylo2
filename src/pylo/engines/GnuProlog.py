@@ -145,8 +145,8 @@ def _pygp_to_structure(term):
     functor = pygprolog.pygp_Rd_String(v1)
     arity = pygprolog.pygp_Rd_Integer(v2)
     args = []
-    v = pygprolog.pygp_Mk_Variable()
     for i in range(1, arity+1):
+        v = pygprolog.pygp_Mk_Variable()
         pygprolog.pygp_Builtin_Arg(pygprolog.pygp_Mk_Integer(i), term, v)
         args.append(_read_pygp(v))
 

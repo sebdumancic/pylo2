@@ -18,9 +18,9 @@ try:
 except Exception:
     pass
 
-
-__all__ = [
-    'GNUProlog',
-    'XSBProlog',
-    'SWIProlog'
-]
+__all__ = engines
+# __all__ = [
+#     'GNUProlog',
+#     'XSBProlog',
+#     'SWIProlog'
+# ]
