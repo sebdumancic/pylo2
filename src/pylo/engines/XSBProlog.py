@@ -1,7 +1,3 @@
-# from src.pylo import (
-#     Prolog
-# )
-# from src.pylo import Variable, Structure, List, Literal, Clause, global_context
 
 from .Prolog import Prolog
 from .language import Variable, Structure, List, Atom, Clause, global_context

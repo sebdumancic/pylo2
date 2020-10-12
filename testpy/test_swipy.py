@@ -1,10 +1,8 @@
-
-from pylo.engines import GNUProlog
+from pylo.engines import SWIProlog
 
 from pylo import global_context, List
 
-
-pl = GNUProlog()
+pl = SWIProlog()
 
 p = global_context.get_predicate("p", 2)
 f = global_context.get_functor("t", 3)
@@ -56,4 +54,3 @@ query3 = r(X, Y)
 
 rv = pl.query(query3)
 print("all solutions after adding list ", rv)
-

@@ -1,8 +1,4 @@
-# from src.pylo import (
-#     Prolog
-# )
-# from  import Constant, Variable, Functor, Structure, List, Literal, Negation, Clause, \
-#     global_context
+
 from .Prolog import Prolog
 from .language import Constant, Variable, Functor, Structure, List, Atom, Negation, Clause, \
     global_context

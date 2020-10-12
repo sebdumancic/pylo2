@@ -20,7 +20,7 @@ except Exception:
 
 
 __all__ = [
-    'GnuProlog',
+    'GNUProlog',
     'XSBProlog',
     'SWIProlog'
 ]
