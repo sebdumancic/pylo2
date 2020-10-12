@@ -4,8 +4,8 @@
 # from src.pylo import Constant, Variable, Functor, Structure, List, Predicate, Literal, Negation, Clause, \
 #     global_context
 from .Prolog import Prolog
-from .language import Constant, Variable, Functor, Structure, Predicate, List, Literal, Negation, Conj, Clause, \
-    global_context, list_func
+from .language import Constant, Variable, Functor, Structure, Predicate, List, Atom, Negation, Conj, Clause, \
+    global_context, list_func, Literal
 import typing
 import sys
 
@@ -146,7 +146,7 @@ def _list_to_swipy_ref(item: List, swipy_ref, lit_var_store: Dict[Variable, int]
         swipy.swipy_cons_list(swipy_ref, clist_term, swipy_ref)
 
 
-def _lit_to_swipy(clause: Literal, lit_var_store: Dict[Variable, int]):
+def _lit_to_swipy(clause: Atom, lit_var_store: Dict[Variable, int]):
     functor = _functor_to_swipy(clause.get_predicate())
     compound_arg = swipy.swipy_new_term_refs(clause.get_predicate().get_arity())
     args = clause.get_arguments()
@@ -188,11 +188,11 @@ def _conjoin_literals(lits: Sequence[int]):
 
 
 def _cl_to_swipy(clause: Clause, lit_var_store: Dict[Variable, int]):
-    body: typing.List[Literal] = clause.get_body().get_literals()
-    head: Literal = clause.get_head()
+    body: typing.List[Union[Atom, Negation]] = clause.get_body().get_literals()
+    head: Atom = clause.get_head()
 
     body: typing.List[int] = [_lit_to_swipy(x, lit_var_store)
-                              if isinstance(x, Literal)
+                              if isinstance(x, Atom)
                               else _neg_to_swipy(x, lit_var_store)
                               for x in body]
 
@@ -349,7 +349,7 @@ class SWIProlog(Prolog):
 
     def asserta(self, clause):
         var_store = {}
-        if isinstance(clause, Literal):
+        if isinstance(clause, Atom):
             swipl_object = _lit_to_swipy(clause, var_store)
         else:
             swipl_object = _cl_to_swipy(clause, var_store)
@@ -361,9 +361,9 @@ class SWIProlog(Prolog):
 
         return r
 
-    def assertz(self, clause: Union[Literal, Clause]):
+    def assertz(self, clause: Union[Atom, Clause]):
         var_store = {}
-        if isinstance(clause, Literal):
+        if isinstance(clause, Atom):
             swipl_object = _lit_to_swipy(clause, var_store)
         else:
             swipl_object = _cl_to_swipy(clause, var_store)
@@ -375,7 +375,7 @@ class SWIProlog(Prolog):
 
         return r
 
-    def retract(self, clause: Literal):
+    def retract(self, clause: Atom):
         lit = _lit_to_swipy(clause, {})
 
         retract = swipy.swipy_predicate("retract", 1, None)
@@ -385,7 +385,7 @@ class SWIProlog(Prolog):
 
         return r
 
-    def has_solution(self, *query: Union[Literal, Negation]):
+    def has_solution(self, *query: Union[Atom, Negation]):
         var_store = {}
 
         if len(query) == 1:
@@ -403,7 +403,7 @@ class SWIProlog(Prolog):
 
             return True if r else False
         else:
-            swipy_objs = [_lit_to_swipy(x, var_store) if isinstance(x, Literal) else _neg_to_swipy(x, var_store) for x
+            swipy_objs = [_lit_to_swipy(x, var_store) if isinstance(x, Atom) else _neg_to_swipy(x, var_store) for x
                           in query]
             first = swipy_objs[0]
             rest = _conjoin_literals(swipy_objs[1:])
@@ -445,7 +445,7 @@ class SWIProlog(Prolog):
             pred = swipy.swipy_predicate(predicate_name, query.get_predicate().get_arity(), None)
             query = swipy.swipy_open_query(pred, query_args)
         else:
-            swipy_objs = [_lit_to_swipy(x, var_store) if isinstance(x, Literal) else _neg_to_swipy(x, var_store) for x
+            swipy_objs = [_lit_to_swipy(x, var_store) if isinstance(x, Atom) else _neg_to_swipy(x, var_store) for x
                           in query]
             first = swipy_objs[0]
             rest = _conjoin_literals(swipy_objs[1:])

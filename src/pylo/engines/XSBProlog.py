@@ -4,7 +4,7 @@
 # from src.pylo import Variable, Structure, List, Literal, Clause, global_context
 
 from .Prolog import Prolog
-from .language import Variable, Structure, List, Literal, Clause, global_context
+from .language import Variable, Structure, List, Atom, Clause, global_context
 import sys
 
 #sys.path.append("../../build")
@@ -114,19 +114,19 @@ class XSBProlog(Prolog):
         command = f"use_module({module},[{','.join([x.get_name() + '/' + str(x.get_arity()) for x in predicates])}])."
         return pyxsb.pyxsb_command_string(command)
 
-    def asserta(self, clause: Union[Clause, Literal]):
-        if isinstance(clause, Literal):
+    def asserta(self, clause: Union[Clause, Atom]):
+        if isinstance(clause, Atom):
             return pyxsb.pyxsb_command_string(f"asserta({clause}).")
         else:
             return pyxsb.pyxsb_command_string(f"asserta(({clause})).")
 
-    def assertz(self, clause: Union[Literal, Clause]):
-        if isinstance(clause, Literal):
+    def assertz(self, clause: Union[Atom, Clause]):
+        if isinstance(clause, Atom):
             return pyxsb.pyxsb_command_string(f"assertz({clause}).")
         else:
             return pyxsb.pyxsb_command_string(f"assertz(({clause})).")
 
-    def retract(self, clause: Union[Literal]):
+    def retract(self, clause: Union[Atom]):
         return pyxsb.pyxsb_command_string(f"retract({clause}).")
 
     def has_solution(self, *query):

@@ -164,7 +164,7 @@ class Predicate:
     def __repr__(self):
         return self._name
 
-    def __call__(self, *args: Union[str, "Constant", "Variable", "Structure", "Predicate", int, float]) -> "Literal":
+    def __call__(self, *args: Union[str, "Constant", "Variable", "Structure", "Predicate", int, float]) -> "Atom":
         argsToUse = []
         # global global_context
         elem: Union[str, "Constant", "Variable", "Structure", "Predicate", int, float]
@@ -185,10 +185,19 @@ class Predicate:
             else:
                 raise Exception(f"Predicate:Don't know how to convert {type(elem)} {elem} to term")
 
-        return Literal(self, argsToUse)
+        return Atom(self, argsToUse)
 
 
 class Literal:
+
+    def get_predicate(self) -> Predicate:
+        raise Exception("not implemented yet!")
+
+    def get_arguments(self) -> Sequence[Union[Term, int, float]]:
+        raise Exception("not implemented yet!")
+
+
+class Atom(Literal):
 
     def __init__(self, predicate: Predicate, args: Sequence[Union[Term, int, float]]):
         self._predicate = predicate
@@ -200,17 +209,17 @@ class Literal:
     def get_arguments(self) -> Sequence[Union[Term, int, float]]:
         return self._args
 
-    def __and__(self, other: Union["Literal", "Negation"]) -> "Conj":
+    def __and__(self, other: Union["Atom", "Negation"]) -> "Conj":
         return Conj(self, other)
 
-    def __le__(self, other: Union["Literal", "Negation", "Conj"]) -> "Clause":
-        if isinstance(other, (Literal, Negation)):
+    def __le__(self, other: Union["Atom", "Negation", "Conj"]) -> "Clause":
+        if isinstance(other, (Atom, Negation)):
             return Clause(self, Conj(other))
         else:
             return Clause(self, other)
 
     def __eq__(self, other) -> bool:
-        if isinstance(other, Literal):
+        if isinstance(other, Atom):
             return self._predicate == other._predicate and \
                    len(self._args) == len(other._args) and \
                    all([x == y for x, y in zip(self._args, other._args)])
@@ -224,15 +233,21 @@ class Literal:
         return hash(str(self))
 
 
-class Negation:
+class Negation(Literal):
 
-    def __init__(self, literal: Literal):
-        self._lit: Literal = literal
+    def __init__(self, literal: Atom):
+        self._lit: Atom = literal
 
-    def get_literal(self) -> "Literal":
+    def get_literal(self) -> "Atom":
         return self._lit
 
-    def __and__(self, other: Union["Literal", "Negation"]) -> "Conj":
+    def get_predicate(self) -> Predicate:
+        return self._lit.get_predicate()
+
+    def get_arguments(self) -> Sequence[Union[Term, int, float]]:
+        return self._lit.get_arguments()
+
+    def __and__(self, other: Union["Atom", "Negation"]) -> "Conj":
         return Conj(self, other)
 
     def __eq__(self, other):
@@ -247,10 +262,10 @@ class Negation:
 
 class Conj:
 
-    def __init__(self, *lits: Union["Literal", "Negation"]):
-        self._lits: typing.List[Union["Literal", "Negation"]] = list(lits)
+    def __init__(self, *lits: Union["Atom", "Negation"]):
+        self._lits: typing.List[Union["Atom", "Negation"]] = list(lits)
 
-    def get_literals(self) -> typing.List[Union["Literal", "Negation"]]:
+    def get_literals(self) -> typing.List[Union["Atom", "Negation"]]:
         return self._lits
 
     def __repr__(self):
@@ -265,8 +280,8 @@ class Conj:
     def __hash__(self):
         return hash(str(self))
 
-    def __and__(self, other: Union["Literal", "Negation", "Conj"]) -> "Conj":
-        if isinstance(other, (Literal, Negation)):
+    def __and__(self, other: Union["Atom", "Negation", "Conj"]) -> "Conj":
+        if isinstance(other, (Atom, Negation)):
             self._lits += [other]
         elif isinstance(other, Conj):
             self._lits += other.get_literals()
@@ -277,18 +292,18 @@ class Conj:
 
 class Clause:
 
-    def __init__(self, head: Literal, body: Conj):
-        self._head: Literal = head
+    def __init__(self, head: Atom, body: Conj):
+        self._head: Atom = head
         self._body: Conj = body
 
-    def get_head(self) -> Literal:
+    def get_head(self) -> Atom:
         return self._head
 
     def get_body(self) -> Conj:
         return self._body
 
-    def __and__(self, other: Union["Literal", "Negation", "Conj"]):
-        if isinstance(other, (Literal, Negation)):
+    def __and__(self, other: Union["Atom", "Negation", "Conj"]):
+        if isinstance(other, (Atom, Negation)):
             self._body & other
         elif isinstance(other, Conj):
             self._body = Conj(self._body.get_literals() + other.get_literals())

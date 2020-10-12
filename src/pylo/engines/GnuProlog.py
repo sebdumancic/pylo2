@@ -4,7 +4,7 @@
 # from  import Constant, Variable, Functor, Structure, List, Literal, Negation, Clause, \
 #     global_context
 from .Prolog import Prolog
-from .language import Constant, Variable, Functor, Structure, List, Literal, Negation, Clause, \
+from .language import Constant, Variable, Functor, Structure, List, Atom, Negation, Clause, \
     global_context
 
 import sys
@@ -74,7 +74,7 @@ def _structure_to_pygp(struct: Structure, lit_var_store: Dict[Variable, int]):
     return pygprolog.pygp_Mk_Compound(func, struct.get_functor().get_arity(), args)
 
 
-def _lit_to_pygp(literal: Literal, var_store=None):
+def _lit_to_pygp(literal: Atom, var_store=None):
     if var_store is None:
         var_store = {}
     pred = pygprolog.pygp_Find_Atom(literal.get_predicate().get_name())
@@ -103,7 +103,7 @@ def _cl_to_pygp(clause: Clause):
     var_store = {}
     head_pygp = _lit_to_pygp(clause.get_head(), var_store)
     body_pygp = [
-        _lit_to_pygp(x, var_store) if isinstance(x, Literal) else _neg_to_pygp(x, var_store)
+        _lit_to_pygp(x, var_store) if isinstance(x, Atom) else _neg_to_pygp(x, var_store)
         for x in clause.get_body().get_literals()
     ]
     # conj_f = pygprolog.pygp_Find_Atom(",")
@@ -205,7 +205,7 @@ class GNUProlog(Prolog):
     def use_module(self, module: str, **kwargs):
         raise Exception(f"GNUProlog does not have modules.")
 
-    def _asserta_lit(self, literal: Literal):
+    def _asserta_lit(self, literal: Atom):
         pl = _lit_to_pygp(literal)
         asa_p = pygprolog.pygp_Find_Atom("asserta")
 
@@ -226,13 +226,13 @@ class GNUProlog(Prolog):
 
         return q_Var1
 
-    def asserta(self, clause: Union[Literal, Clause]):
-        if isinstance(clause, Literal):
+    def asserta(self, clause: Union[Atom, Clause]):
+        if isinstance(clause, Atom):
             return self._asserta_lit(clause)
         else:
             return self._asserta_cl(clause)
 
-    def _assertz_lit(self, literal: Literal):
+    def _assertz_lit(self, literal: Atom):
         pl = _lit_to_pygp(literal)
         asa_p = pygprolog.pygp_Find_Atom("assertz")
 
@@ -253,13 +253,13 @@ class GNUProlog(Prolog):
 
         return q_Var1
 
-    def assertz(self, clause: Union[Literal, Clause]):
-        if isinstance(clause, Literal):
+    def assertz(self, clause: Union[Atom, Clause]):
+        if isinstance(clause, Atom):
             return self._assertz_lit(clause)
         else:
             return self._assertz_cl(clause)
 
-    def _retract_lit(self, literal: Literal):
+    def _retract_lit(self, literal: Atom):
         pl = _lit_to_pygp(literal)
         asa_p = pygprolog.pygp_Find_Atom("retract")
 
@@ -280,13 +280,13 @@ class GNUProlog(Prolog):
 
         return q_Var1
 
-    def retract(self, clause: Union[Literal, Clause]):
-        if isinstance(clause, Literal):
+    def retract(self, clause: Union[Atom, Clause]):
+        if isinstance(clause, Atom):
             return self._retract_lit(clause)
         if isinstance(clause, Clause):
             return self._retract_cl(clause)
 
-    def has_solution(self, *query: Union[Literal, Negation]):
+    def has_solution(self, *query: Union[Atom, Negation]):
         var_store = {}
 
         if len(query) == 1:
@@ -303,7 +303,7 @@ class GNUProlog(Prolog):
         else:
             first_elem = _lit_to_pygp(query[0], var_store)
             rest = [
-                _lit_to_pygp(x, var_store) if isinstance(x, Literal) else _neg_to_pygp(x, var_store)
+                _lit_to_pygp(x, var_store) if isinstance(x, Atom) else _neg_to_pygp(x, var_store)
                 for x in query[1:]
             ]
             rest = _conjoin_lits(rest)
@@ -338,7 +338,7 @@ class GNUProlog(Prolog):
         else:
             first = _lit_to_pygp(query[0], var_store)
             rest = [
-                _lit_to_pygp(x, var_store) if isinstance(x, Literal) else _neg_to_pygp(x, var_store)
+                _lit_to_pygp(x, var_store) if isinstance(x, Atom) else _neg_to_pygp(x, var_store)
                 for x in query[1:]
             ]
             rest = _conjoin_lits(rest)
