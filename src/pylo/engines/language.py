@@ -152,6 +152,9 @@ class Predicate:
     def get_arity(self) -> int:
         return self._arity
 
+    def as_proposition(self) -> "Atom":
+        return Atom(self, [])
+
     def __eq__(self, other):
         if isinstance(other, Predicate):
             return self._name == other._name and self._arity == other._arity
@@ -227,7 +230,10 @@ class Atom(Literal):
             return False
 
     def __repr__(self):
-        return f"{self._predicate}({','.join([str(x) for x in self._args])})"
+        if self._predicate.get_arity() > 0:
+            return f"{self._predicate}({','.join([str(x) for x in self._args])})"
+        else:
+            return f"{self._predicate}"
 
     def __hash__(self):
         return hash(str(self))
@@ -283,6 +289,8 @@ class Conj:
     def __and__(self, other: Union["Atom", "Negation", "Conj"]) -> "Conj":
         if isinstance(other, (Atom, Negation)):
             self._lits += [other]
+        elif isinstance(other, Predicate):
+            self._lits += [other.as_proposition()]
         elif isinstance(other, Conj):
             self._lits += other.get_literals()
         else:
@@ -292,8 +300,11 @@ class Conj:
 
 class Clause:
 
-    def __init__(self, head: Atom, body: Conj):
-        self._head: Atom = head
+    def __init__(self, head: Union[Atom, Predicate], body: Conj):
+        if isinstance(head, Predicate):
+            self._head = head.as_proposition()
+        else:
+            self._head: Atom = head
         self._body: Conj = body
 
     def get_head(self) -> Atom:

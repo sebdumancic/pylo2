@@ -1,3 +1,6 @@
+# from src.pylo import Prolog
+# from src.pylo import Constant, Variable, Functor, Structure, List, Atom, Negation, Clause, \
+#     global_context
 
 from .Prolog import Prolog
 from .language import Constant, Variable, Functor, Structure, List, Atom, Negation, Clause, \
@@ -124,7 +127,7 @@ def _pygp_to_number(term):
     if pygprolog.pygp_Type_Of_Term(term) == 3:
         return int(pygprolog.pygp_Rd_Integer(term))
     elif pygprolog.pygp_Type_Of_Term(term) == 4:
-        return float(pygprolog.pygp_Rd_Float(term))
+        return float(pygprolog.pygp_Rd_Decimal(term))
     else:
         raise Exception(f"term type {pygprolog.pygp_Type_Of_Term(term)} is not a number")
 
