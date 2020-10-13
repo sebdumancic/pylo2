@@ -379,8 +379,11 @@ class SWIProlog(Prolog):
 
         return r
 
-    def retract(self, clause: Atom):
-        lit = _lit_to_swipy(clause, {})
+    def retract(self, clause: Union[Atom, Clause]):
+        if isinstance(clause, Atom):
+            lit = _lit_to_swipy(clause, {})
+        else:
+            lit = _cl_to_swipy(clause, {})
 
         retract = swipy.swipy_predicate("retract", 1, None)
         query = swipy.swipy_open_query(retract, lit)

@@ -122,8 +122,11 @@ class XSBProlog(Prolog):
         else:
             return pyxsb.pyxsb_command_string(f"assertz(({clause})).")
 
-    def retract(self, clause: Union[Atom]):
-        return pyxsb.pyxsb_command_string(f"retract({clause}).")
+    def retract(self, clause: Union[Atom, Clause]):
+        if isinstance(clause, Atom):
+            return pyxsb.pyxsb_command_string(f"retract({clause}).")
+        else:
+            return pyxsb.pyxsb_command_string(f"retract(({clause})).")
 
     def has_solution(self, *query):
         string_repr = ','.join([str(x) for x in query])
