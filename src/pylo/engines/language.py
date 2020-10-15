@@ -199,6 +199,9 @@ class Literal:
     def get_arguments(self) -> Sequence[Union[Term, int, float]]:
         raise Exception("not implemented yet!")
 
+    def is_ground(self) -> bool:
+        raise Exception("not implemented yet!")
+
 
 class Atom(Literal):
 
@@ -211,6 +214,9 @@ class Atom(Literal):
 
     def get_arguments(self) -> Sequence[Union[Term, int, float]]:
         return self._args
+
+    def is_ground(self) -> bool:
+        return not any([isinstance(x, Variable) for x in self._args])
 
     def __and__(self, other: Union["Atom", "Negation"]) -> "Conj":
         return Conj(self, other)
@@ -252,6 +258,9 @@ class Negation(Literal):
 
     def get_arguments(self) -> Sequence[Union[Term, int, float]]:
         return self._lit.get_arguments()
+
+    def is_ground(self) -> bool:
+        return self._lit.is_ground()
 
     def __and__(self, other: Union["Atom", "Negation"]) -> "Conj":
         return Conj(self, other)
