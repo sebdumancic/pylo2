@@ -1,5 +1,5 @@
-
-engines = []
+from .Prolog import Prolog
+engines = ['Prolog']
 try:
     from .GnuProlog import GNUProlog
     engines += ['GNUProlog']

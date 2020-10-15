@@ -366,58 +366,103 @@ class GNUProlog(Prolog):
 
 
 if __name__ == '__main__':
-    pl = GNUProlog()
 
-    p = global_context.get_predicate("p", 2)
-    f = global_context.get_functor("t", 3)
-    f1 = p("a", "b")
+    def test1():
+        pl = GNUProlog()
 
-    pl.assertz(f1)
+        p = global_context.get_predicate("p", 2)
+        f = global_context.get_functor("t", 3)
+        f1 = p("a", "b")
 
-    X = global_context.get_variable("X")
-    Y = global_context.get_variable("Y")
+        pl.assertz(f1)
 
-    query = p(X, Y)
+        X = global_context.get_variable("X")
+        Y = global_context.get_variable("Y")
 
-    r = pl.has_solution(query)
-    print("has solution", r)
+        query = p(X, Y)
 
-    rv = pl.query(query)
-    print("all solutions", rv)
+        r = pl.has_solution(query)
+        print("has solution", r)
 
-    f2 = p("a", "c")
-    pl.assertz(f2)
+        rv = pl.query(query)
+        print("all solutions", rv)
 
-    rv = pl.query(query)
-    print("all solutions after adding f2", rv)
+        f2 = p("a", "c")
+        pl.assertz(f2)
 
-    func1 = f(1, 2, 3)
-    f3 = p(func1, "b")
-    pl.assertz(f3)
+        rv = pl.query(query)
+        print("all solutions after adding f2", rv)
 
-    rv = pl.query(query)
-    print("all solutions after adding structure", rv)
+        func1 = f(1, 2, 3)
+        f3 = p(func1, "b")
+        pl.assertz(f3)
 
-    l = List([1, 2, 3, 4, 5])
+        rv = pl.query(query)
+        print("all solutions after adding structure", rv)
 
-    member = global_context.get_predicate("member", 2)
+        l = List([1, 2, 3, 4, 5])
 
-    query2 = member(X, l)
+        member = global_context.get_predicate("member", 2)
 
-    rv = pl.query(query2)
-    print("all solutions to list membership ", rv)
+        query2 = member(X, l)
 
-    r = global_context.get_predicate("r", 2)
-    f4 = r("a", l)
-    f5 = r("a", "b")
+        rv = pl.query(query2)
+        print("all solutions to list membership ", rv)
 
-    pl.asserta(f4)
-    pl.asserta(f5)
+        r = global_context.get_predicate("r", 2)
+        f4 = r("a", l)
+        f5 = r("a", "b")
 
-    query3 = r(X, Y)
+        pl.asserta(f4)
+        pl.asserta(f5)
 
-    rv = pl.query(query3)
-    print("all solutions after adding list ", rv)
+        query3 = r(X, Y)
+
+        rv = pl.query(query3)
+        print("all solutions after adding list ", rv)
+
+    def test5():
+        solver = GNUProlog()
+
+        edge = global_context.get_predicate("edge", 2)
+        path = global_context.get_predicate("path", 2)
+
+        f1 = edge("v1", "v2")
+        f2 = edge("v1", "v3")
+        f3 = edge("v2", "v4")
+
+        X = global_context.get_variable("X")
+        Y = global_context.get_variable("Y")
+        Z = global_context.get_variable("Z")
+
+        cl1 = path(X, Y) <= edge(X, Y)
+        cl2 = path(X, Y) <= edge(X, Z) & path(Z, Y)
+
+        solver.assertz(f1)
+        solver.assertz(f2)
+        solver.assertz(f3)
+
+        solver.assertz(cl1)
+        solver.assertz(cl2)
+
+        assert solver.has_solution(path("v1", "v2"))
+        assert solver.has_solution(path("v1", "v4"))
+        assert not solver.has_solution(path("v3", "v4"))
+
+        assert len(solver.query(path("v1", X), max_solutions=1)[0]) == 1
+        assert len(solver.query(path(X, "v4"), max_solutions=1)[0]) == 1
+        assert len(solver.query(path(X, Y), max_solutions=1)[0]) == 2
+
+        assert len(solver.query(path("v1", X))) == 3
+        assert len(solver.query(path(X, Y))) == 4
+
+        solver.assertz(edge("v4", "v5"))
+        assert len(solver.query(path(X, Y))) == 7
+
+        print(solver.query(edge(X, Y), edge(Y, Z), edge(Z,"W")))
+        del solver
+
+    test5()
 
 
 

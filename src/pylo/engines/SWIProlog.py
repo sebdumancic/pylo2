@@ -1,11 +1,11 @@
-from src.pylo import (
-    Prolog
-)
-from src.pylo import Constant, Variable, Functor, Structure, List, Predicate, Atom, Negation, Clause, \
-    global_context
-# from .Prolog import Prolog
-# from .language import Constant, Variable, Functor, Structure, Predicate, List, Atom, Negation, Conj, Clause, \
-#     global_context, list_func, Literal
+# from src.pylo import (
+#     Prolog
+# )
+# from src.pylo import Constant, Variable, Functor, Structure, List, Predicate, Atom, Negation, Clause, \
+#     global_context
+from .Prolog import Prolog
+from .language import Constant, Variable, Functor, Structure, Predicate, List, Atom, Negation, Conj, Clause, \
+    global_context, list_func, Literal
 import typing
 import sys
 
@@ -618,9 +618,9 @@ if __name__ == '__main__':
 
         #pl.assertz((bongard(A,"la") <= triangle(A,C) & inp(A, C, D)))
 
-        #res = pl.query(bongard(A, "la"), triangle(A,C), inp(A, C, D))
+        res = pl.query(bongard(A, "la"), triangle(A,C), inp(A, C, D))
 
-        print(pl.query(config(A, B, C)))
+        print(res)
 
         del pl
 
