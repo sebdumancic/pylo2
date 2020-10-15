@@ -1,11 +1,11 @@
-# from src.pylo import (
-#     Prolog
-# )
-# from src.pylo import Constant, Variable, Functor, Structure, List, Predicate, Literal, Negation, Clause, \
-#     global_context
-from .Prolog import Prolog
-from .language import Constant, Variable, Functor, Structure, Predicate, List, Atom, Negation, Conj, Clause, \
-    global_context, list_func, Literal
+from src.pylo import (
+    Prolog
+)
+from src.pylo import Constant, Variable, Functor, Structure, List, Predicate, Atom, Negation, Clause, \
+    global_context
+# from .Prolog import Prolog
+# from .language import Constant, Variable, Functor, Structure, Predicate, List, Atom, Negation, Conj, Clause, \
+#     global_context, list_func, Literal
 import typing
 import sys
 
@@ -156,7 +156,7 @@ def _lit_to_swipy(clause: Atom, lit_var_store: Dict[Variable, int]):
         args = clause.get_arguments()
         _to_swipy_ref(args[0], compound_arg, lit_var_store)
         for i in range(1, clause.get_predicate().get_arity()):
-            _to_swipy_ref(args[i], compound_arg + 1, lit_var_store)
+            _to_swipy_ref(args[i], compound_arg+i, lit_var_store)
 
         literal = swipy.swipy_new_term_ref()
         swipy.swipy_cons_functor(literal, functor, compound_arg)
@@ -520,70 +520,192 @@ class SWIProlog(Prolog):
 
 
 if __name__ == '__main__':
-    pl = SWIProlog()
 
-    p = global_context.get_predicate("p", 2)
-    f = global_context.get_functor("t", 3)
-    f1 = p("a", "b")
+    def test1():
+        pl = SWIProlog()
 
-    pl.assertz(f1)
+        p = global_context.get_predicate("p", 2)
+        f = global_context.get_functor("t", 3)
+        f1 = p("a", "b")
 
-    X = global_context.get_variable("X")
-    Y = global_context.get_variable("Y")
+        pl.assertz(f1)
 
-    query = p(X, Y)
+        X = global_context.get_variable("X")
+        Y = global_context.get_variable("Y")
 
-    r = pl.has_solution(query)
-    print("has solution", r)
+        query = p(X, Y)
 
-    rv = pl.query(query)
-    print("all solutions", rv)
+        r = pl.has_solution(query)
+        print("has solution", r)
 
-    f2 = p("a", "c")
-    pl.assertz(f2)
+        rv = pl.query(query)
+        print("all solutions", rv)
 
-    rv = pl.query(query)
-    print("all solutions after adding f2", rv)
+        f2 = p("a", "c")
+        pl.assertz(f2)
 
-    func1 = f(1, 2, 3)
-    f3 = p(func1, "b")
-    pl.assertz(f3)
+        rv = pl.query(query)
+        print("all solutions after adding f2", rv)
 
-    rv = pl.query(query)
-    print("all solutions after adding structure", rv)
+        func1 = f(1, 2, 3)
+        f3 = p(func1, "b")
+        pl.assertz(f3)
 
-    l = List([1, 2, 3, 4, 5])
+        rv = pl.query(query)
+        print("all solutions after adding structure", rv)
 
-    member = global_context.get_predicate("member", 2)
+        l = List([1, 2, 3, 4, 5])
 
-    query2 = member(X, l)
+        member = global_context.get_predicate("member", 2)
 
-    rv = pl.query(query2)
-    print("all solutions to list membership ", rv)
+        query2 = member(X, l)
 
-    r = global_context.get_predicate("r", 2)
-    f4 = r("a", l)
-    f5 = r("a", "b")
+        rv = pl.query(query2)
+        print("all solutions to list membership ", rv)
 
-    pl.asserta(f4)
-    pl.asserta(f5)
+        r = global_context.get_predicate("r", 2)
+        f4 = r("a", l)
+        f5 = r("a", "b")
 
-    query3 = r(X, Y)
+        pl.asserta(f4)
+        pl.asserta(f5)
 
-    rv = pl.query(query3)
-    print("all solutions after adding list ", rv)
+        query3 = r(X, Y)
 
-    # Foreign predicates
+        rv = pl.query(query3)
+        print("all solutions after adding list ", rv)
 
-    def hello(t):
-        print("Foreign: Hello", t)
+        # Foreign predicates
 
-    hello_pred = pl.register_foreign(hello, 1)
-    # print(hello_pred)
+        def hello(t):
+            print("Foreign: Hello", t)
 
-    f_query = hello_pred("a")
+        hello_pred = pl.register_foreign(hello, 1)
+        # print(hello_pred)
 
-    pl.has_solution(f_query)
+        f_query = hello_pred("a")
+
+        pl.has_solution(f_query)
+
+        del pl
+
+    def test2():
+        pl = SWIProlog()
+
+        bongard = global_context.get_predicate('bongard', 2)
+        circle = global_context.get_predicate('circle', 2)
+        inp = global_context.get_predicate('in', 3)
+        config = global_context.get_predicate('pconfig', 3)
+        triangle = global_context.get_predicate('triangle', 2)
+        square = global_context.get_predicate('square', 2)
+
+        pl.assertz(bongard(2, "la"))
+        pl.assertz(circle(2, "o3"))
+        pl.assertz(config(2, "o1", "up"))
+        pl.assertz(config(2, "o2", "up"))
+        pl.assertz(config(2, "o5", "up"))
+        pl.assertz(triangle(2, "o1"))
+        pl.assertz(triangle(2, "o2"))
+        pl.assertz(triangle(2, "o5"))
+        # pl.assertz(square(2, "o4"))
+        pl.assertz(inp(2, "o4", "o5"))
+        pl.assertz(inp(2, "o2", "o3"))
+
+        A = global_context.get_variable("A")
+        B = global_context.get_variable("B")
+        C = global_context.get_variable("C")
+        D = global_context.get_variable("D")
+
+        #pl.assertz((bongard(A,"la") <= triangle(A,C) & inp(A, C, D)))
+
+        #res = pl.query(bongard(A, "la"), triangle(A,C), inp(A, C, D))
+
+        print(pl.query(config(A, B, C)))
+
+        del pl
+
+    def test4():
+        pl = SWIProlog()
+
+        parent = global_context.get_predicate("parent", 2)
+        grandparent = global_context.get_predicate("grandparent", 2)
+
+        f1 = parent("p1", "p2")
+        f2 = parent("p2", "p3")
+
+        v1 = global_context.get_variable("X")
+        v2 = global_context.get_variable("Y")
+        v3 = global_context.get_variable("Z")
+
+        cl = (grandparent(v1, v3) <= parent(v1, v2) & parent(v2, v3))
+
+        pl.assertz(f1)
+        pl.assertz(f2)
+        pl.assertz(cl)
+
+        assert pl.has_solution(parent(v1, v2))
+        assert not pl.has_solution(parent(v1, v1))
+        assert len(pl.query(parent(v1, v2))) == 2
+        assert len(pl.query(parent("p1", v1))) == 1
+        assert pl.has_solution(parent("p1", "p2"))
+        assert not pl.has_solution(parent("p2", "p1"))
+        assert len(pl.query(parent("p1", v1), max_solutions=1)) == 1
+
+        assert pl.has_solution(grandparent(v1, v2))
+        assert pl.has_solution(grandparent("p1", v1))
+        assert len(pl.query(grandparent("p1", v1), max_solutions=1)) == 1
+
+        print(pl.query(grandparent(v1, v2)))
+
+        pl.assertz(parent("p2", "p4"))
+        pl.assertz(parent("p1", "p5"))
+        print(pl.query(grandparent(v1, v2)))
+
+        del pl
+
+    def test5():
+        solver = SWIProlog()
+
+        edge = global_context.get_predicate("edge", 2)
+        path = global_context.get_predicate("path", 2)
+
+        f1 = edge("v1", "v2")
+        f2 = edge("v1", "v3")
+        f3 = edge("v2", "v4")
+
+        X = global_context.get_variable("X")
+        Y = global_context.get_variable("Y")
+        Z = global_context.get_variable("Z")
+
+        cl1 = path(X, Y) <= edge(X, Y)
+        cl2 = path(X, Y) <= edge(X, Z) & path(Z, Y)
+
+        solver.assertz(f1)
+        solver.assertz(f2)
+        solver.assertz(f3)
+
+        solver.assertz(cl1)
+        solver.assertz(cl2)
+
+        assert solver.has_solution(path("v1", "v2"))
+        assert solver.has_solution(path("v1", "v4"))
+        assert not solver.has_solution(path("v3", "v4"))
+
+        assert len(solver.query(path("v1", X), max_solutions=1)[0]) == 1
+        assert len(solver.query(path(X, "v4"), max_solutions=1)[0]) == 1
+        assert len(solver.query(path(X, Y), max_solutions=1)[0]) == 2
+
+        assert len(solver.query(path("v1", X))) == 3
+        assert len(solver.query(path(X, Y))) == 4
+
+        solver.assertz(edge("v4", "v5"))
+        assert len(solver.query(path(X, Y))) == 7
+
+        print(solver.query(edge(X, Y), edge(Y, Z), edge(Z,"W")))
+        del solver
+
+
+    test2()
 
 
 
