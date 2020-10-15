@@ -1,6 +1,10 @@
-
-from .Prolog import Prolog
-from .language import Variable, Structure, List, Atom, Clause, global_context
+from src.pylo import (
+    Prolog
+)
+from src.pylo import Constant, Variable, Functor, Structure, List, Predicate, Atom, Negation, Clause, \
+    global_context
+# from .Prolog import Prolog
+# from .language import Variable, Structure, List, Atom, Clause, global_context
 import sys
 
 #sys.path.append("../../build")
@@ -112,15 +116,19 @@ class XSBProlog(Prolog):
 
     def asserta(self, clause: Union[Clause, Atom]):
         if isinstance(clause, Atom):
-            return pyxsb.pyxsb_command_string(f"asserta({clause}).")
+            query = f"asserta({clause})."
+            return pyxsb.pyxsb_command_string(query)
         else:
-            return pyxsb.pyxsb_command_string(f"asserta(({clause})).")
+            query = f"asserta(({clause}))."
+            return pyxsb.pyxsb_command_string(query)
 
     def assertz(self, clause: Union[Atom, Clause]):
         if isinstance(clause, Atom):
-            return pyxsb.pyxsb_command_string(f"assertz({clause}).")
+            query = f"assertz({clause})."
+            return pyxsb.pyxsb_command_string(query)
         else:
-            return pyxsb.pyxsb_command_string(f"assertz(({clause})).")
+            query = f"assertz(({clause}))."
+            return pyxsb.pyxsb_command_string(query)
 
     def retract(self, clause: Union[Atom, Clause]):
         if isinstance(clause, Atom):
@@ -128,7 +136,8 @@ class XSBProlog(Prolog):
         else:
             return pyxsb.pyxsb_command_string(f"retract(({clause})).")
 
-    def has_solution(self, *query):
+    def has_solution(self, *query: Atom):
+        #assert not all([x.is_ground() for x in query]), "XSB Prolog currently cannot query ground queries"
         string_repr = ','.join([str(x) for x in query])
         res = pyxsb.pyxsb_query_string(f"{string_repr}.")
 
@@ -158,6 +167,8 @@ class XSBProlog(Prolog):
 
             res = pyxsb.pyxsb_next_string()
             max_solutions -= 1
+
+        pyxsb.pyxsb_close_query()
 
         return all_solutions
 
@@ -229,6 +240,8 @@ if __name__ == '__main__':
         rv = pl.query(query4)
         print("all solutions to q: ", rv)
 
+        del pl
+
 
     def test2():
         pl = XSBProlog("/Users/seb/Documents/programs/XSB")
@@ -273,4 +286,81 @@ if __name__ == '__main__':
         tv = pl.query(asthma("X"))
         print("all asthma: ", tv)
 
-    test1()
+        del pl
+
+    def test3():
+        pl = XSBProlog("/Users/seb/Documents/programs/XSB")
+
+        bongard = global_context.get_predicate('bongard', 2)
+        circle = global_context.get_predicate('circle', 2)
+        inp = global_context.get_predicate('in', 3)
+        config = global_context.get_predicate('config', 3)
+        triangle = global_context.get_predicate('triangle', 2)
+        square = global_context.get_predicate('square', 2)
+
+        pl.assertz(bongard(2, "la"))
+        pl.assertz(circle(2, "o3"))
+        pl.assertz(config(2, "o1", "up"))
+        pl.assertz(config(2, "o2", "up"))
+        pl.assertz(config(2, "o5", "up"))
+        pl.assertz(triangle(2, "o1"))
+        pl.assertz(triangle(2, "o2"))
+        pl.assertz(triangle(2, "o5"))
+        pl.assertz(square(2, "o4"))
+        pl.assertz(inp(2, "o4", "o5"))
+        pl.assertz(inp(2, "o2", "o3"))
+
+        A = global_context.get_variable("A")
+        B = global_context.get_variable("B")
+        C = global_context.get_variable("C")
+        D = global_context.get_variable("D")
+
+        #pl.assertz((bongard(A,"la") <= triangle(A,C) & inp(A, C, D)))
+
+        res = pl.query(bongard(A, "la"), triangle(A,C), inp(A, C, D))
+
+        print(res)
+
+        del pl
+
+    def test5():
+        solver = XSBProlog("/Users/seb/Documents/programs/XSB")
+
+        edge = global_context.get_predicate("edge", 2)
+        path = global_context.get_predicate("path", 2)
+
+        f1 = edge("v1", "v2")
+        f2 = edge("v1", "v3")
+        f3 = edge("v2", "v4")
+
+        X = global_context.get_variable("X")
+        Y = global_context.get_variable("Y")
+        Z = global_context.get_variable("Z")
+
+        cl1 = (path("X", "Y") <= edge("X", "Y"))
+        cl2 = (path("X", "Y") <= edge("X", "Z") & path("Z", "Y"))
+
+        as1 = solver.assertz(f1)
+        as2 = solver.assertz(f2)
+        as3 = solver.assertz(f3)
+
+        as4 = solver.assertz(cl1)
+        solver.assertz(cl2)
+
+        assert solver.has_solution(edge("X", "v2"))
+        assert solver.has_solution(path("v1", "v4"))
+        assert len(solver.query(path("v1", "X"), max_solutions=1)[0]) == 1
+        assert len(solver.query(path(X, "v4"), max_solutions=1)[0]) == 1
+        assert len(solver.query(path(X, Y), max_solutions=1)[0]) == 2
+
+        assert len(solver.query(path("v1", X))) == 3
+        assert len(solver.query(path(X, Y))) == 4
+
+        solver.assertz(edge("v4", "v5"))
+        assert len(solver.query(path(X, Y))) == 7
+
+        print(solver.query(edge(X, Y), edge(Y, Z), edge(Z,"W")))
+
+        del solver
+
+    test5()
