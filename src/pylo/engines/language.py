@@ -3,6 +3,10 @@ from typing import Sequence, Union
 import typing
 
 
+class InputError(Exception):
+    pass
+
+
 class Term(ABC):
 
     def __init__(self, name: str):
@@ -24,17 +28,29 @@ class Term(ABC):
         return self._name
 
 
+def is_float(value):
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
+
 class Constant(Term):
 
-    def __init__(self, name):
-        assert name.islower(), f"Constants should be name with lowercase {name}"
+    def __init__(self, name: str):
+        if len(name) == 0:
+            raise InputError('empty Constant')
+        assert name[0].isdigit() or name[0].islower() or is_float(name), f"Constants should be name with lowercase {name}"
         super().__init__(name)
 
 
 class Variable(Term):
 
-    def __init__(self, name):
-        assert name.isupper(), f"Variables should be name uppercase {name}"
+    def __init__(self, name: str):
+        if len(name) == 0:
+            raise InputError("empty variable")
+
+        assert name[0].isupper() or name[0] == "_", f"Variables should be name uppercase {name}"
         super().__init__(name)
 
 
