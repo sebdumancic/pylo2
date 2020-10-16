@@ -17,7 +17,7 @@ from functools import reduce
 import ctypes
 
 
-def _const_to_swipy(const: Constant):
+def _const_to_swipy(const: Union[Constant, Predicate]):
     c = swipy.swipy_new_term_ref()
     swipy.swipy_put_atom_chars(c, const.get_name())
     return c
@@ -148,7 +148,7 @@ def _list_to_swipy_ref(item: List, swipy_ref, lit_var_store: Dict[Variable, int]
 
 def _lit_to_swipy(clause: Atom, lit_var_store: Dict[Variable, int]):
     if clause.get_predicate().get_arity() == 0:
-        functor = _functor_to_swipy(clause.get_predicate())
+        functor = _const_to_swipy(clause.get_predicate())
         return functor
     else:
         functor = _functor_to_swipy(clause.get_predicate())
