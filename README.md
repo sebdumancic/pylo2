@@ -8,6 +8,7 @@ Supported Prolog engines:
  - [XSB Prolog](http://xsb.sourceforge.net/) 
  
 Under development:
+ - [ ] [ECLiPSe](http://eclipseclp.org/) and its [Python interface](http://pyclp.sourceforge.net/)
  - [ ] [Ciao Prolog](https://ciao-lang.org/) and its [C interface](https://ciao-lang.org/ciao/build/doc/ciao.html/foreign_interface_doc.html)
  - [ ] [TauProlog](http://tau-prolog.org/)  (with [pyv8](https://code.google.com/archive/p/pyv8/)) 
  
@@ -18,6 +19,10 @@ Maybe supported in the future:
   - [ ] [Bousi Prolog](https://dectau.uclm.es/bousi-prolog/)
 
 
+# Supported system
+
+The library was tested on Linux (Ubuntu) and OSX.
+
 # Installation
 
 ## Installation with pip
@@ -27,17 +32,25 @@ The desired Prolog engines need to be installed first.
 
 To install the support for **GNU Prolog**, you need to provide the `GNUPROLOG_HOME` variable pointing to the installation folder of GNU Prolog:
 ```shell script
-# For OSX with default configuration
+# For OSX with default configuration (installed from sources)
 export GNUPROLOG_HOME=/usr/local/gprolog-1.4.5
+# On Ubuntu
+export GNUPROLOG_HOMe=/usr/lib/gprolog-1.4.5
 ```
 
 To install the support for **XSB_PROLOG**, you need to provide `XSB_HOME` variable pointing to the source of XSB Prolog.
 This is the folder in which you unpacked the XSB source files.
+For example
+```shell script
+export XSB_HOME=/Users/user/Documents/programs/XSB
+```
 
 To install the support for **SWI Prolog**, you need to provide `SWIPL_HOME` variable pointing to the installation folder of SWIPL:
 ```shell script
-# on OSX, installed from sources
-export SWIPL_HOME=/usr/local/Cellar/swi-prolog/8.2.0/libexec/lib/swipl/lib/x86_64-darwin
+# on OSX, (installed from Homebrew)
+export SWIPL_HOME=/usr/local/Cellar/swi-prolog/8.2.0/libexec/lib/swipl
+# On Ubuntu, installed from the repository
+export SWIPL_HOME=/usr
 ```
 
 
@@ -55,6 +68,15 @@ python setup.py install
 ```
 
 That's it! You should be able to use Pylo now.
+
+
+**STEP 4 (optional):** Test
+Navigate to the `testpy` folder and test the library:
+```shell script
+python test_gprolog.py
+python test_swipy.py
+python test_xsb.py
+```
 
 
 
@@ -329,8 +351,10 @@ print("all asthma: ", tv)
 
 # Missing features
 
- - [ ] remember all created variables, so that they can be properly bound to the objects in the language
+ - [x] remember all created variables, so that they can be properly bound to the objects in the language
  - [ ] providing python functions as predicates
+ - [ ] remove `global_context`
+ - [ ] support for pairs (`[|]/2` or `./2`)
  - [ ] documentation
    - [x] high-level engine
    - [ ] low-level primitives 

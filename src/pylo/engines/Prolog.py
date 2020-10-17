@@ -35,6 +35,10 @@ class Prolog(ABC):
     def query(self, *query, **kwargs):
         pass
 
+    @abstractmethod
+    def register_foreign(self, pyfunction, arity):
+        pass
+
 
 
 

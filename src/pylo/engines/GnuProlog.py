@@ -1,10 +1,9 @@
-# from src.pylo import (
-#     Prolog
-# )
-# from  import Constant, Variable, Functor, Structure, List, Literal, Negation, Clause, \
+# from src.pylo import Prolog
+# from src.pylo import Constant, Variable, Functor, Structure, List, Atom, Negation, Clause, \
 #     global_context
+
 from .Prolog import Prolog
-from .language import Constant, Variable, Functor, Structure, List, Literal, Negation, Clause, \
+from .language import Constant, Variable, Functor, Structure, List, Atom, Negation, Clause, \
     global_context
 
 import sys
@@ -74,7 +73,7 @@ def _structure_to_pygp(struct: Structure, lit_var_store: Dict[Variable, int]):
     return pygprolog.pygp_Mk_Compound(func, struct.get_functor().get_arity(), args)
 
 
-def _lit_to_pygp(literal: Literal, var_store=None):
+def _lit_to_pygp(literal: Atom, var_store=None):
     if var_store is None:
         var_store = {}
     pred = pygprolog.pygp_Find_Atom(literal.get_predicate().get_name())
@@ -103,7 +102,7 @@ def _cl_to_pygp(clause: Clause):
     var_store = {}
     head_pygp = _lit_to_pygp(clause.get_head(), var_store)
     body_pygp = [
-        _lit_to_pygp(x, var_store) if isinstance(x, Literal) else _neg_to_pygp(x, var_store)
+        _lit_to_pygp(x, var_store) if isinstance(x, Atom) else _neg_to_pygp(x, var_store)
         for x in clause.get_body().get_literals()
     ]
     # conj_f = pygprolog.pygp_Find_Atom(",")
@@ -128,7 +127,7 @@ def _pygp_to_number(term):
     if pygprolog.pygp_Type_Of_Term(term) == 3:
         return int(pygprolog.pygp_Rd_Integer(term))
     elif pygprolog.pygp_Type_Of_Term(term) == 4:
-        return float(pygprolog.pygp_Rd_Float(term))
+        return float(pygprolog.pygp_Rd_Decimal(term))
     else:
         raise Exception(f"term type {pygprolog.pygp_Type_Of_Term(term)} is not a number")
 
@@ -149,8 +148,8 @@ def _pygp_to_structure(term):
     functor = pygprolog.pygp_Rd_String(v1)
     arity = pygprolog.pygp_Rd_Integer(v2)
     args = []
-    v = pygprolog.pygp_Mk_Variable()
     for i in range(1, arity+1):
+        v = pygprolog.pygp_Mk_Variable()
         pygprolog.pygp_Builtin_Arg(pygprolog.pygp_Mk_Integer(i), term, v)
         args.append(_read_pygp(v))
 
@@ -205,7 +204,7 @@ class GNUProlog(Prolog):
     def use_module(self, module: str, **kwargs):
         raise Exception(f"GNUProlog does not have modules.")
 
-    def _asserta_lit(self, literal: Literal):
+    def _asserta_lit(self, literal: Atom):
         pl = _lit_to_pygp(literal)
         asa_p = pygprolog.pygp_Find_Atom("asserta")
 
@@ -226,13 +225,13 @@ class GNUProlog(Prolog):
 
         return q_Var1
 
-    def asserta(self, clause: Union[Literal, Clause]):
-        if isinstance(clause, Literal):
+    def asserta(self, clause: Union[Atom, Clause]):
+        if isinstance(clause, Atom):
             return self._asserta_lit(clause)
         else:
             return self._asserta_cl(clause)
 
-    def _assertz_lit(self, literal: Literal):
+    def _assertz_lit(self, literal: Atom):
         pl = _lit_to_pygp(literal)
         asa_p = pygprolog.pygp_Find_Atom("assertz")
 
@@ -253,13 +252,13 @@ class GNUProlog(Prolog):
 
         return q_Var1
 
-    def assertz(self, clause: Union[Literal, Clause]):
-        if isinstance(clause, Literal):
+    def assertz(self, clause: Union[Atom, Clause]):
+        if isinstance(clause, Atom):
             return self._assertz_lit(clause)
         else:
             return self._assertz_cl(clause)
 
-    def _retract_lit(self, literal: Literal):
+    def _retract_lit(self, literal: Atom):
         pl = _lit_to_pygp(literal)
         asa_p = pygprolog.pygp_Find_Atom("retract")
 
@@ -280,13 +279,13 @@ class GNUProlog(Prolog):
 
         return q_Var1
 
-    def retract(self, clause: Union[Literal, Clause]):
-        if isinstance(clause, Literal):
+    def retract(self, clause: Union[Atom, Clause]):
+        if isinstance(clause, Atom):
             return self._retract_lit(clause)
         if isinstance(clause, Clause):
             return self._retract_cl(clause)
 
-    def has_solution(self, *query: Union[Literal, Negation]):
+    def has_solution(self, *query: Union[Atom, Negation]):
         var_store = {}
 
         if len(query) == 1:
@@ -303,7 +302,7 @@ class GNUProlog(Prolog):
         else:
             first_elem = _lit_to_pygp(query[0], var_store)
             rest = [
-                _lit_to_pygp(x, var_store) if isinstance(x, Literal) else _neg_to_pygp(x, var_store)
+                _lit_to_pygp(x, var_store) if isinstance(x, Atom) else _neg_to_pygp(x, var_store)
                 for x in query[1:]
             ]
             rest = _conjoin_lits(rest)
@@ -338,7 +337,7 @@ class GNUProlog(Prolog):
         else:
             first = _lit_to_pygp(query[0], var_store)
             rest = [
-                _lit_to_pygp(x, var_store) if isinstance(x, Literal) else _neg_to_pygp(x, var_store)
+                _lit_to_pygp(x, var_store) if isinstance(x, Atom) else _neg_to_pygp(x, var_store)
                 for x in query[1:]
             ]
             rest = _conjoin_lits(rest)
@@ -362,60 +361,108 @@ class GNUProlog(Prolog):
 
         return all_solutions
 
+    def register_foreign(self, pyfunction, arity):
+        raise Exception("support for foreign predicate not implemented yet")
+
 
 if __name__ == '__main__':
-    pl = GNUProlog()
 
-    p = global_context.get_predicate("p", 2)
-    f = global_context.get_functor("t", 3)
-    f1 = p("a", "b")
+    def test1():
+        pl = GNUProlog()
 
-    pl.assertz(f1)
+        p = global_context.get_predicate("p", 2)
+        f = global_context.get_functor("t", 3)
+        f1 = p("a", "b")
 
-    X = global_context.get_variable("X")
-    Y = global_context.get_variable("Y")
+        pl.assertz(f1)
 
-    query = p(X, Y)
+        X = global_context.get_variable("X")
+        Y = global_context.get_variable("Y")
 
-    r = pl.has_solution(query)
-    print("has solution", r)
+        query = p(X, Y)
 
-    rv = pl.query(query)
-    print("all solutions", rv)
+        r = pl.has_solution(query)
+        print("has solution", r)
 
-    f2 = p("a", "c")
-    pl.assertz(f2)
+        rv = pl.query(query)
+        print("all solutions", rv)
 
-    rv = pl.query(query)
-    print("all solutions after adding f2", rv)
+        f2 = p("a", "c")
+        pl.assertz(f2)
 
-    func1 = f(1, 2, 3)
-    f3 = p(func1, "b")
-    pl.assertz(f3)
+        rv = pl.query(query)
+        print("all solutions after adding f2", rv)
 
-    rv = pl.query(query)
-    print("all solutions after adding structure", rv)
+        func1 = f(1, 2, 3)
+        f3 = p(func1, "b")
+        pl.assertz(f3)
 
-    l = List([1, 2, 3, 4, 5])
+        rv = pl.query(query)
+        print("all solutions after adding structure", rv)
 
-    member = global_context.get_predicate("member", 2)
+        l = List([1, 2, 3, 4, 5])
 
-    query2 = member(X, l)
+        member = global_context.get_predicate("member", 2)
 
-    rv = pl.query(query2)
-    print("all solutions to list membership ", rv)
+        query2 = member(X, l)
 
-    r = global_context.get_predicate("r", 2)
-    f4 = r("a", l)
-    f5 = r("a", "b")
+        rv = pl.query(query2)
+        print("all solutions to list membership ", rv)
 
-    pl.asserta(f4)
-    pl.asserta(f5)
+        r = global_context.get_predicate("r", 2)
+        f4 = r("a", l)
+        f5 = r("a", "b")
 
-    query3 = r(X, Y)
+        pl.asserta(f4)
+        pl.asserta(f5)
 
-    rv = pl.query(query3)
-    print("all solutions after adding list ", rv)
+        query3 = r(X, Y)
+
+        rv = pl.query(query3)
+        print("all solutions after adding list ", rv)
+
+    def test5():
+        solver = GNUProlog()
+
+        edge = global_context.get_predicate("edge", 2)
+        path = global_context.get_predicate("path", 2)
+
+        f1 = edge("v1", "v2")
+        f2 = edge("v1", "v3")
+        f3 = edge("v2", "v4")
+
+        X = global_context.get_variable("X")
+        Y = global_context.get_variable("Y")
+        Z = global_context.get_variable("Z")
+
+        cl1 = path(X, Y) <= edge(X, Y)
+        cl2 = path(X, Y) <= edge(X, Z) & path(Z, Y)
+
+        solver.assertz(f1)
+        solver.assertz(f2)
+        solver.assertz(f3)
+
+        solver.assertz(cl1)
+        solver.assertz(cl2)
+
+        assert solver.has_solution(path("v1", "v2"))
+        assert solver.has_solution(path("v1", "v4"))
+        assert not solver.has_solution(path("v3", "v4"))
+
+        assert len(solver.query(path("v1", X), max_solutions=1)[0]) == 1
+        assert len(solver.query(path(X, "v4"), max_solutions=1)[0]) == 1
+        assert len(solver.query(path(X, Y), max_solutions=1)[0]) == 2
+
+        assert len(solver.query(path("v1", X))) == 3
+        assert len(solver.query(path(X, Y))) == 4
+
+        solver.assertz(edge("v4", "v5"))
+        assert len(solver.query(path(X, Y))) == 7
+
+        print(solver.query(edge(X, Y), edge(Y, Z), edge(Z,"W")))
+        del solver
+
+    test5()
 
 
 

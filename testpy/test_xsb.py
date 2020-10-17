@@ -1,10 +1,8 @@
-
-from pylo.engines import GNUProlog
+from pylo.engines import XSBProlog
 
 from pylo import global_context, List
 
-
-pl = GNUProlog()
+pl = XSBProlog("/Users/seb/Documents/programs/XSB")
 
 p = global_context.get_predicate("p", 2)
 f = global_context.get_functor("t", 3)
@@ -39,6 +37,7 @@ print("all solutions after adding structure", rv)
 l = List([1, 2, 3, 4, 5])
 
 member = global_context.get_predicate("member", 2)
+pl.use_module("lists", predicates=[member])
 
 query2 = member(X, l)
 
@@ -57,3 +56,10 @@ query3 = r(X, Y)
 rv = pl.query(query3)
 print("all solutions after adding list ", rv)
 
+q = global_context.get_predicate("q", 2)
+cl = (q("X", "Y") <= r("X", "Y") & r("X", "Z"))
+
+pl.assertz(cl)
+query4 = q("X", "Y")
+rv = pl.query(query4)
+print("all solutions to q: ", rv)

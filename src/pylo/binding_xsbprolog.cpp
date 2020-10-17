@@ -33,23 +33,60 @@ PYBIND11_MODULE(pyxsb, m)
             rc = xsb_query_string_string(query, &return_string, const_cast<char *>(";"));
 
             if (rc == XSB_SUCCESS){
-                return return_string.string;
+                char *result = return_string.string;
+                XSB_StrDestroy(&return_string);
+                if (strlen(result) > 0) {
+                    return result;
+                }
+                else {
+                    return const_cast<char *>("###SUCCESS###");
+                }
+
+            }
+            else if (rc == XSB_FAILURE) {
+                XSB_StrDestroy(&return_string);
+                return const_cast<char *>("");
+            }
+            else if (rc == XSB_ERROR) {
+                cout << "Query error: \n";
+                cout << xsb_get_error_type();
+                cout << xsb_get_error_message();
+                //fprintf(stderr,"++Query Error: \n"  + xsb_get_error_type() + " /// " + xsb_get_error_message());
+                XSB_StrDestroy(&return_string);
+                return const_cast<char *>("");
             }
             else {
+                XSB_StrDestroy(&return_string);
                 return const_cast<char *>("");
             }
 
         }, "opens a query over string");
     //m.def("pyxsb_query_string_string", &xsb_query_string_string, "opens a query over string and context");
+
+    m.def("pyxsb_has_solution", [](char *query) {
+        XSB_StrDefine(return_string);
+        int rc;
+        rc = xsb_query_string_string(query, &return_string, const_cast<char *>(";"));
+
+        if (rc == XSB_SUCCESS){
+            XSB_StrDestroy(&return_string);
+            xsb_close_query();
+            return true;
+        }
+    });
+
     m.def("pyxsb_next_string", []() {
             XSB_StrDefine(return_string);
             int rc;
             rc = xsb_next_string(&return_string, const_cast<char *>(";"));
 
             if (rc == XSB_SUCCESS) {
-                return return_string.string;
+                char *result = return_string.string;
+                XSB_StrDestroy(&return_string);
+                return result;
             }
             else {
+                XSB_StrDestroy(&return_string);
                 return const_cast<char *>("");
             }
 

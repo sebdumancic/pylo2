@@ -1,5 +1,5 @@
-
-engines = []
+from .Prolog import Prolog
+engines = ['Prolog']
 try:
     from .GnuProlog import GNUProlog
     engines += ['GNUProlog']
@@ -18,9 +18,9 @@ try:
 except Exception:
     pass
 
-
-__all__ = [
-    'GnuProlog',
-    'XSBProlog',
-    'SWIProlog'
-]
+__all__ = engines
+# __all__ = [
+#     'GNUProlog',
+#     'XSBProlog',
+#     'SWIProlog'
+# ]
