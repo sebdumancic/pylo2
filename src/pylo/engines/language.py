@@ -28,19 +28,44 @@ class Term(ABC):
         return self._name
 
 
-def is_float(value):
+def is_float(value: str):
     try:
         float(value)
         return True
     except ValueError:
         return False
 
+
+def starts_with_digit(name: str):
+    return name[0].isdigit()
+
+
+def starts_with_lower_case(name: str):
+    return name[0].islower()
+
+
+def is_surrounded_by_single_quotes(name: str):
+    quote_char = "'"
+    return len(name) > 3 and name[0] == quote_char and name[-1] == quote_char and quote_char not in name[1:-1]
+
+
+def is_valid_constant(name: str):
+    if len(name) == 0:
+        return False
+
+    return (starts_with_digit(name)
+            or starts_with_lower_case(name)
+            or is_float(name)
+            or is_surrounded_by_single_quotes(name)
+            )
+
+
 class Constant(Term):
 
     def __init__(self, name: str):
         if len(name) == 0:
             raise InputError('empty Constant')
-        assert name[0].isdigit() or name[0].islower() or is_float(name), f"Constants should be name with lowercase {name}"
+        assert is_valid_constant(name), f"Constants should be name with lowercase {name}"
         super().__init__(name)
 
 
@@ -83,10 +108,13 @@ class Functor:
         global global_context
         elem: Union[str, "Constant", "Variable", "Structure", "List", int, float]
         for elem in args:
+            # STARTS with lower case
             if isinstance(elem, str) and elem.islower():
                 args_to_use.append(global_context.get_constant(elem))
+            # STARTS with uppercase
             elif isinstance(elem, str) and elem.isupper():
                 args_to_use.append(global_context.get_variable(elem))
+            # Is a Constant, Variable, Structure, List, int or Float
             elif isinstance(elem, (Constant, Variable, Structure, List, int, float)):
                 args_to_use.append(elem)
             else:
