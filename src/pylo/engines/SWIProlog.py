@@ -1,11 +1,11 @@
-# from src.pylo import (
-#     Prolog
-# )
-# from src.pylo import Constant, Variable, Functor, Structure, List, Predicate, Atom, Negation, Clause, \
-#     global_context
-from .Prolog import Prolog
-from .language import Constant, Variable, Functor, Structure, Predicate, List, Atom, Negation, Conj, Clause, \
-    global_context, list_func, Literal
+from src.pylo import (
+    Prolog
+)
+from src.pylo import Constant, Variable, Functor, Structure, List, Predicate, Atom, Negation, Clause, \
+    c_pred, c_const, c_var, c_functor
+# from .Prolog import Prolog
+# from .language import Constant, Variable, Functor, Structure, Predicate, List, Atom, Negation, Conj, Clause, \
+#     list_func, Literal, c_pred, c_const, c_var, c_functor
 import typing
 import sys
 
@@ -217,7 +217,7 @@ def _cl_to_swipy(clause: Clause, lit_var_store: Dict[Variable, int]):
 
 def _swipy_to_const(term):
     name = swipy.swipy_get_atom_chars(term)
-    return global_context.get_constant(name)
+    return c_const(name)
 
 
 def _swipy_to_int(term):
@@ -261,7 +261,7 @@ def _swipy_to_list(term):
 def _swipy_to_structure(term):
     name, arity = swipy.swipy_get_name_arity(term)
     name = swipy.swipy_atom_chars(name)
-    functor = global_context.get_functor(name, arity)
+    functor = c_functor(name, arity)
 
     structure_elements = []
     for arg_ind in range(1, arity + 1):
@@ -516,7 +516,7 @@ class SWIProlog(Prolog):
 
         res = swipy.swipy_register_foreign(pyfunction.__name__, arity, fwrap2, 0)
 
-        return global_context.get_predicate(pyfunction.__name__, arity)
+        return c_pred(pyfunction.__name__, arity)
 
 
 if __name__ == '__main__':
@@ -524,14 +524,14 @@ if __name__ == '__main__':
     def test1():
         pl = SWIProlog()
 
-        p = global_context.get_predicate("p", 2)
-        f = global_context.get_functor("t", 3)
+        p = c_pred("p", 2)
+        f = c_functor("t", 3)
         f1 = p("a", "b")
 
         pl.assertz(f1)
 
-        X = global_context.get_variable("X")
-        Y = global_context.get_variable("Y")
+        X = c_var("X")
+        Y = c_var("Y")
 
         query = p(X, Y)
 
@@ -556,14 +556,14 @@ if __name__ == '__main__':
 
         l = List([1, 2, 3, 4, 5])
 
-        member = global_context.get_predicate("member", 2)
+        member = c_pred("member", 2)
 
         query2 = member(X, l)
 
         rv = pl.query(query2)
         print("all solutions to list membership ", rv)
 
-        r = global_context.get_predicate("r", 2)
+        r = c_pred("r", 2)
         f4 = r("a", l)
         f5 = r("a", "b")
 
@@ -592,12 +592,12 @@ if __name__ == '__main__':
     def test2():
         pl = SWIProlog()
 
-        bongard = global_context.get_predicate('bongard', 2)
-        circle = global_context.get_predicate('circle', 2)
-        inp = global_context.get_predicate('in', 3)
-        config = global_context.get_predicate('pconfig', 3)
-        triangle = global_context.get_predicate('triangle', 2)
-        square = global_context.get_predicate('square', 2)
+        bongard = c_pred('bongard', 2)
+        circle = c_pred('circle', 2)
+        inp = c_pred('in', 3)
+        config = c_pred('pconfig', 3)
+        triangle = c_pred('triangle', 2)
+        square = c_pred('square', 2)
 
         pl.assertz(bongard(2, "la"))
         pl.assertz(circle(2, "o3"))
@@ -611,10 +611,10 @@ if __name__ == '__main__':
         pl.assertz(inp(2, "o4", "o5"))
         pl.assertz(inp(2, "o2", "o3"))
 
-        A = global_context.get_variable("A")
-        B = global_context.get_variable("B")
-        C = global_context.get_variable("C")
-        D = global_context.get_variable("D")
+        A = c_var("A")
+        B = c_var("B")
+        C = c_var("C")
+        D = c_var("D")
 
         #pl.assertz((bongard(A,"la") <= triangle(A,C) & inp(A, C, D)))
 
@@ -627,15 +627,15 @@ if __name__ == '__main__':
     def test4():
         pl = SWIProlog()
 
-        parent = global_context.get_predicate("parent", 2)
-        grandparent = global_context.get_predicate("grandparent", 2)
+        parent = c_pred("parent", 2)
+        grandparent = c_pred("grandparent", 2)
 
         f1 = parent("p1", "p2")
         f2 = parent("p2", "p3")
 
-        v1 = global_context.get_variable("X")
-        v2 = global_context.get_variable("Y")
-        v3 = global_context.get_variable("Z")
+        v1 = c_var("X")
+        v2 = c_var("Y")
+        v3 = c_var("Z")
 
         cl = (grandparent(v1, v3) <= parent(v1, v2) & parent(v2, v3))
 
@@ -666,16 +666,16 @@ if __name__ == '__main__':
     def test5():
         solver = SWIProlog()
 
-        edge = global_context.get_predicate("edge", 2)
-        path = global_context.get_predicate("path", 2)
+        edge = c_pred("edge", 2)
+        path = c_pred("path", 2)
 
         f1 = edge("v1", "v2")
         f2 = edge("v1", "v3")
         f3 = edge("v2", "v4")
 
-        X = global_context.get_variable("X")
-        Y = global_context.get_variable("Y")
-        Z = global_context.get_variable("Z")
+        X = c_var("X")
+        Y = c_var("Y")
+        Z = c_var("Z")
 
         cl1 = path(X, Y) <= edge(X, Y)
         cl2 = path(X, Y) <= edge(X, Z) & path(Z, Y)
@@ -705,7 +705,8 @@ if __name__ == '__main__':
         del solver
 
 
-    test2()
+    test1()
+    test5()
 
 
 

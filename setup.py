@@ -1,14 +1,21 @@
 import setuptools
 import os
-import platform
 import re
 import sys
 
+import platform
 from distutils.version import LooseVersion
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
 import subprocess
 
+is_linux = False
+is_mac = False
+
+if platform.system() == 'Linux':
+    is_linux = True
+if platform.system() == 'Darwin':
+    is_mac = True
 
 # identify which engines to build
 build_gnu = os.environ.get('GNUPROLOG_HOME')
@@ -28,7 +35,8 @@ if build_xsb:
 
 if build_swi:
     swi_path = build_swi
-    swi_path += "/lib"
+    if is_mac:
+        swi_path += "/lib"
     arch_dir = [x.path for x in os.scandir(swi_path) if x.is_dir()][0]
     os.environ['SWIPL_LIB_PATH'] = arch_dir
 
@@ -124,7 +132,7 @@ with open("README.md", "r") as fh:
 
 
 setuptools.setup(name='pylo',
-                 version='0.2',
+                 version='0.2.1',
                  author='Sebastijan Dumancic',
                  author_email='sebastijan.dumancic@gmail.com',
                  description="Python wrapper for several Prolog engines",
