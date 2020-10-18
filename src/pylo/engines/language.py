@@ -46,7 +46,7 @@ def starts_with_lower_case(name: str):
 
 def is_surrounded_by_single_quotes(name: str):
     quote_char = "'"
-    return len(name) > 3 and name[0] == quote_char and name[-1] == quote_char and quote_char not in name[1:-1]
+    return len(name) >= 3 and name[0] == quote_char and name[-1] == quote_char and quote_char not in name[1:-1]
 
 
 def is_valid_constant(name: str):
@@ -59,6 +59,21 @@ def is_valid_constant(name: str):
             or is_surrounded_by_single_quotes(name)
             )
 
+def starts_with_upper_case(name: str):
+    return name[0].isupper()
+
+
+def starts_with_underscore(name: str):
+    return name[0] == '_'
+
+
+def is_valid_variable(name: str):
+    if len(name) == 0:
+        return False
+
+    return (starts_with_upper_case(name)
+            or starts_with_underscore(name)
+            )
 
 class Constant(Term):
 
@@ -75,7 +90,7 @@ class Variable(Term):
         if len(name) == 0:
             raise InputError("empty variable")
 
-        assert name[0].isupper() or name[0] == "_", f"Variables should be name uppercase {name}"
+        assert is_valid_variable(name), f"Variables should be name uppercase {name}"
         super().__init__(name)
 
 
@@ -112,7 +127,7 @@ class Functor:
             if isinstance(elem, str) and elem.islower():
                 args_to_use.append(global_context.get_constant(elem))
             # STARTS with uppercase
-            elif isinstance(elem, str) and elem.isupper():
+            elif isinstance(elem, str) and is_valid_variable(name):
                 args_to_use.append(global_context.get_variable(elem))
             # Is a Constant, Variable, Structure, List, int or Float
             elif isinstance(elem, (Constant, Variable, Structure, List, int, float)):
@@ -221,9 +236,9 @@ class Predicate:
                     argsToUse.append(float(elem))
                 else:
                     argsToUse.append(int(elem))
-            if isinstance(elem, str) and elem[0].isupper():
+            elif isinstance(elem, str) and elem[0].isupper():
                 argsToUse.append(global_context.get_variable(elem))
-            elif isinstance(elem, str) and elem[0].islower():
+            elif isinstance(elem, str) and is_valid_constant(elem):
                 argsToUse.append(global_context.get_constant(elem))
             elif isinstance(elem, (Constant, Variable, Structure, Predicate)):
                 argsToUse.append(elem)
