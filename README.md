@@ -1,10 +1,14 @@
-Python wrappers around Prolog engines
+`pylo` is a Python front-end for several Prolog engines.
+It allows you to write your program once and execute it with different Prolog engines simply by switching the back-end.
 
-# Engines
+
+**Supported OS:** The library was tested on Linux (Ubuntu) and OSX.
+
+# Supported Prolog engines
 
 Supported Prolog engines:
  - [SWIPL](https://www.swi-prolog.org/)
- - [GNU Prolog](http://www.gprolog.org)
+ - [GNU Prolog](http://www.gprolog.org) (works only on OSX so far; GNNU PROLOG's foreign function interface does not compile properly on Linux)
  - [XSB Prolog](http://xsb.sourceforge.net/) 
  
 Under development:
@@ -19,15 +23,12 @@ Maybe supported in the future:
   - [ ] [Bousi Prolog](https://dectau.uclm.es/bousi-prolog/)
 
 
-# Supported system
-
-The library was tested on Linux (Ubuntu) and OSX.
 
 # Installation
 
 ## Installation with pip
 
-**STEP 1:** Pylo relies on ENV variables to detect which Prolog engines to support.
+**STEP 1:** `pylo` relies on ENV variables to detect which Prolog engines to support.
 The desired Prolog engines need to be installed first.
 
 To install the support for **GNU Prolog**, you need to provide the `GNUPROLOG_HOME` variable pointing to the installation folder of GNU Prolog:
@@ -37,6 +38,13 @@ export GNUPROLOG_HOME=/usr/local/gprolog-1.4.5
 # On Ubuntu
 export GNUPROLOG_HOMe=/usr/lib/gprolog-1.4.5
 ```
+You are looking for the folder that contains the following:
+```text
+COPYING     NEWS        VERSION     doc         gprolog.ico lib
+ChangeLog   README      bin         examples    include
+```
+
+
 
 To install the support for **XSB_PROLOG**, you need to provide `XSB_HOME` variable pointing to the source of XSB Prolog.
 This is the folder in which you unpacked the XSB source files.
@@ -44,14 +52,30 @@ For example
 ```shell script
 export XSB_HOME=/Users/user/Documents/programs/XSB
 ```
+You are looking for a folder that contains the following:
+```text
+FAQ             README          cmplib          etc             lib             site
+InstallXSB.jar  admin           config          examples        packages        syslib
+LICENSE         bin             docs            gpp             prolog-commons
+Makefile        build           emu             installer       prolog_includes
+```
 
-To install the support for **SWI Prolog**, you need to provide `SWIPL_HOME` variable pointing to the installation folder of SWIPL:
+To install the support for **SWI Prolog**, you need to provide `SWIPL_HOME` variable pointing to the installation folder of SWIPL.
+On OSX, this looks like
 ```shell script
 # on OSX, (installed from Homebrew)
 export SWIPL_HOME=/usr/local/Cellar/swi-prolog/8.2.0/libexec/lib/swipl
-# On Ubuntu, installed from the repository
-export SWIPL_HOME=/usr
 ```
+You are looking for that contains the following items:
+```text
+LICENSE    README.md  bin        boot       boot.prc   customize  demo       doc        include    lib        library    swipl.home
+```
+On Ubuntu, it should be enough to set it to `/usr/lib`
+```shell script
+# On Ubuntu, installed from the repository
+export SWIPL_HOME=/usr/lib
+```
+This folder should contain `libswipl.so` (Linux) file and the `swi-prolog` folder. 
 
 
 **STEP 2:** Clone this repository.
@@ -145,51 +169,80 @@ If you want to build the support for several Prolog engines, you have to compile
 
 # Usage
 
+## Language design
+
+`pylo` follows the logic programming terminology, instead of Prolog terminology,
+The basic constructs include terms:
+ - constants: `luke, leia, anakin` or Python numbers like `1, -3, 3.14`
+ - variables: `X, Y`
+ - structures: `sabre(green,long), date(2020,january,1)`
+ - lists (a special kind of structure): `List([1,2,3,4,5])`
+ 
+To construct clauses, one needs:
+ - predicates: `parent, ...`
+ - literals:
+   - atoms (predicate applied to terms): `parent(vader,luke), mother(padme, leia)`
+   - negations of atoms: `Not(parent(vader,luke))`
+ - clauses: `parent(X,Y) :- mother(X,Y)`
+ 
+ 
+To reduce the memory usage, constants, variables, functors and predicates should be constructed through context:
+ - constants: `c_const('luke')` creates a constant `luke` (for numbers, just use Python structures)
+ - variables: `c_var('X')` creates a variables `X`
+ - predicates: `c_pred('parent', 2)` creates a predicate `parent` with arity 2
+ - functors: `c_functor('date', 3)` creates a functor `date` with arity 3
+ 
+If you want to use a proposition in a clause (a functor without arguments), like `a :- ...`, create it as a `Predicate` with arity 0. 
+Be careful to construct clauses with literals, not structures.
+ 
+ 
+
+
 ## Specifying knowledge
 
 Pylo allows you to conveniently specify the knowledge base and the query it with different prolog engines.
-All basic constructs (constants, variables, functors and predicates) should be created using the `global_context`, which ensures that there are not duplicates. 
+All basic constructs (constants, variables, functors and predicates) should be created using the *global context* (functions prefixed with `c_`: `c_const`, `c_pred`, `c_var`, `c_functor`), which ensures that there are not duplicates. 
 
 ```python
-from pylo import global_context, Literal, Clause, Conj, Structure, List, list_func
+from pylo import c_pred, c_var, c_const, c_functor, Atom, Clause, Conj, Structure, List
 
 # create some constants 
-luke = global_context.get_constant("luke")             
-anakin = global_context.get_constant("anakin")
-leia = global_context.get_constant("leia")
-padme = global_context.get_constant("padme")
+luke = c_const("luke")             
+anakin = c_const("anakin")
+leia = c_const("leia")
+padme = c_const("padme")
 
 
 # create predicates
-father = global_context.get_predicate("father", 2)      
-mother = global_context.get_predicate("mother", 2)
-parent = global_context.get_predicate("parent", 2)
+father = c_pred("father", 2)      
+mother = c_pred("mother", 2)
+parent = c_pred("parent", 2)
 
 
 # create literals
-f1 = Literal(father, [anakin, luke])                    
-f2 = Literal(father, [anakin, leia])
-f3 = Literal(mother, [padme, luke])
-f4 = Literal(mother, [padme, leia])
+f1 = Atom(father, [anakin, luke])                    
+f2 = Atom(father, [anakin, leia])
+f3 = Atom(mother, [padme, luke])
+f4 = Atom(mother, [padme, leia])
 
 
 # create Variables
-X = global_context.get_variable("X")                   
-Y = global_context.get_variables("Y")
+X = c_var("X")                   
+Y = c_var("Y")
 
 
 # create clauses 
-head = Literal(parent, [X,Y])                           
-body1 = Literal(father, [X,Y])
-body2 = Literal(mother, [X,Y])
+head = Atom(parent, [X,Y])                           
+body1 = Atom(father, [X,Y])
+body2 = Atom(mother, [X,Y])
 rule1 = Clause(head, Conj(body1))
 rule2 = Clause(head, Conj(body2))
 
 
 # create structures
-sabre = global_context.get_constant("sabre")
-green = global_context.get_constant("green")
-item = global_context.get_functor("item")
+sabre = c_const("sabre")
+green = c_const("green")
+item = c_functor("item")
 
 struct = Structure(item, [sabre, green])
 
@@ -203,13 +256,13 @@ Pylo also provides many convenient shortcuts for less tedious construction of kn
 The above example could have been constructed in the following way
 
 ```python
-from pylo import global_context, List
+from pylo import c_pred, c_const, c_var, c_functor, List
 
 # construct predicates
-father = global_context.get_predicate("father", 2)
-mother = global_context.get_predicate("mother", 2)
-parent = global_context.get_predicate("parent", 2)
-belongs_to = global_context.get_predicate("belongs_to", 2)
+father = c_pred("father", 2)
+mother = c_pred("mother", 2)
+parent = c_pred("parent", 2)
+belongs_to = c_pred("belongs_to", 2)
 
 # create facts directly
 #    applying the predicate symbol to terms/strings creates a literal
@@ -222,7 +275,7 @@ f4 = mother("padme", "leia")
 # create structures directly
 #     applying the functor to a series of terms/strings creates a structure
 #     it also knows how to convert strings to the right form
-item = global_context.get_functor("item", 2)
+item = c_functor("item", 2)
 struct = item("sabre", "green")
 
 f5 = belongs_to(struct, "luke")
@@ -302,16 +355,16 @@ pl.query()
 A more elaborate example
 ```python
 from pylo.engines import XSBProlog
-from pylo import global_context
+from pylo import c_pred 
 
 pl = XSBProlog("/Users/seb/Documents/programs/XSB")
 
-person = global_context.get_predicate("person", 1)
-friends = global_context.get_predicate("friends", 2)
-stress = global_context.get_predicate("stress", 1)
-influences = global_context.get_predicate("influences", 2)
-smokes = global_context.get_predicate("smokes", 1)
-asthma = global_context.get_predicate("asthma", 1)
+person = c_pred("person", 1)
+friends = c_pred("friends", 2)
+stress = c_pred("stress", 1)
+influences = c_pred("influences", 2)
+smokes = c_pred("smokes", 1)
+asthma = c_pred("asthma", 1)
 
 pl.assertz(person("a"))
 pl.assertz(person("b"))
@@ -351,10 +404,5 @@ print("all asthma: ", tv)
 
 # Missing features
 
- - [x] remember all created variables, so that they can be properly bound to the objects in the language
  - [ ] providing python functions as predicates
- - [ ] remove `global_context`
  - [ ] support for pairs (`[|]/2` or `./2`)
- - [ ] documentation
-   - [x] high-level engine
-   - [ ] low-level primitives 
