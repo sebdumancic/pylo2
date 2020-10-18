@@ -8,7 +8,7 @@ It allows you to write your program once and execute it with different Prolog en
 
 Supported Prolog engines:
  - [SWIPL](https://www.swi-prolog.org/)
- - [GNU Prolog](http://www.gprolog.org)
+ - [GNU Prolog](http://www.gprolog.org) (works only on OSX so far; GNNU PROLOG's foreign function interface does not compile properly on Linux)
  - [XSB Prolog](http://xsb.sourceforge.net/) 
  
 Under development:

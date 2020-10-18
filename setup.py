@@ -37,7 +37,9 @@ if build_swi:
     swi_path = build_swi
     if is_mac:
         swi_path += "/lib"
-    arch_dir = [x.path for x in os.scandir(swi_path) if x.is_dir()][0]
+        arch_dir = [x.path for x in os.scandir(swi_path) if x.is_dir()][0]
+    else:
+        arch_dir = swi_path
     os.environ['SWIPL_LIB_PATH'] = arch_dir
 
 print(f"Building:\n\tGNU:{build_gnu}\n\tXSB:{build_xsb}\n\tSWIPL:{build_swi}")

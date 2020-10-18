@@ -11,6 +11,8 @@ option(GPROLOG "Compile GNU-Prolog" OFF)
 option(XSBPROLOG "Compile XSB Prolog" OFF)
 option(SWIPL "Compile SWI Prolog" OFF)
 
+message("building:\n\tGNU PROLOG: ${GPROLOG}\n\tXSB PROLOG: ${XSBPROLOG}\n\tSWIPL: ${SWIPL}")
+
 add_subdirectory(lib/pybind11)
 
 if (CIAO)
@@ -26,12 +28,12 @@ target_link_libraries(ciaopy PUBLIC libciaoengine.dylib)
 add_compile_options(-Wall -Wextra -pedantic -v -undefined dynamic_lookup -fPIC -fno-stack-check -fno-strict-aliasing -O2 -fomit-frame-pointer   -D_REENTRANT -DTHREADS -DFOREIGN_FILES  -DDARWIN -Dx86_64  -DUSE_OWN_MALLOC  -DANDPARALLEL  -DTABLING -Wstrict-prototypes -Wl,-rpath -Wl,/Users/seb/.ciaoroot/master/build/eng/ciaoengine/objs/DARWINx86_64) #(-v -undefined dynamic_lookup) # -fPIC `python -m pybind11 --includes`)
 endif (CIAO)
 
-if (UNIX)
+if (UNIX AND NOT APPLE)
     message("Compiling for Linux!")
 endif()
 
 if (APPLE)
-    message("Compilig for Mac!")
+    message("Compiling for Mac!")
 endif()
 
 # GNU_PROLOG
@@ -76,7 +78,7 @@ if (GPROLOG)
         #target_link_libraries(pygprolog PUBLIC /usr/local/gprolog-1.4.5/lib/toplevel.o)
         #target_link_libraries(pygprolog PUBLIC /usr/local/gprolog-1.4.5/lib/toplevel_main.o)
         #target_link_libraries(pygprolog PUBLIC /Users/seb/Documents/programs/gprolog-1.4.5/pylo/libengine_fd.a)
-        target_compile_options(pygprolog PUBLIC -Wall -Wextra -pedantic -v -undefined dynamic_lookup -fPIC)
+        target_compile_options(pygprolog PUBLIC -Wall -Wextra -pedantic -v -fPIC)
 
     endif()
 
@@ -101,7 +103,11 @@ if(XSBPROLOG)
     #target_link_libraries(pyxsb PUBLIC "${XSB_HOME_DIR}/config/i386-apple-darwin18.7.0/saved.o/xsb.o")
     target_link_libraries(pyxsb PUBLIC "${XSB_FULL_DIR}/saved.o/xsb.o")
     #add_compile_options(-O3 -fno-strict-aliasing -v -undefined dynamic_lookup -fPIC -Wall -pipe )
-    target_compile_options(pyxsb PUBLIC -O3 -fno-strict-aliasing -v -undefined dynamic_lookup -fPIC -Wall -pipe)
+    if(APPLE)
+        target_compile_options(pyxsb PUBLIC -O3 -fno-strict-aliasing -v -undefined dynamic_lookup -fPIC -Wall -pipe)
+    else()
+        target_compile_options(pyxsb PUBLIC -O3 -fno-strict-aliasing -v -fPIC -Wall -pipe)
+    endif()
 endif(XSBPROLOG)
 
 if(SWIPL)
