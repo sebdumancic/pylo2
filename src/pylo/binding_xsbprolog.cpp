@@ -3,7 +3,7 @@
 //
 #include <pybind11/pybind11.h>  // has to be the first include, otherwise it doesn't compile
 #include "cinterf.h"
-//#include <string.h>
+#include <string.h>
 #include <iostream>
 
 
@@ -33,10 +33,14 @@ PYBIND11_MODULE(pyxsb, m)
             rc = xsb_query_string_string(query, &return_string, const_cast<char *>(";"));
 
             if (rc == XSB_SUCCESS){
-                char *result = return_string.string;
-                XSB_StrDestroy(&return_string);
-                if (strlen(result) > 0) {
-                    return result;
+                //int result_length = sizeof(return_string.string)/sizeof(char);
+                //char result[result_length];
+                //strcpy(result, return_string.string);
+                //XSB_StrDestroy(&return_string);
+                if (strlen(return_string.string) > 0) {
+                    //cout << "found solution: " << result << "\n";
+                    //return result;
+                    return return_string.string;
                 }
                 else {
                     return const_cast<char *>("###SUCCESS###");
@@ -63,17 +67,17 @@ PYBIND11_MODULE(pyxsb, m)
         }, "opens a query over string");
     //m.def("pyxsb_query_string_string", &xsb_query_string_string, "opens a query over string and context");
 
-    m.def("pyxsb_has_solution", [](char *query) {
-        XSB_StrDefine(return_string);
-        int rc;
-        rc = xsb_query_string_string(query, &return_string, const_cast<char *>(";"));
-
-        if (rc == XSB_SUCCESS){
-            XSB_StrDestroy(&return_string);
-            xsb_close_query();
-            return true;
-        }
-    });
+//    m.def("pyxsb_has_solution", [](char *query) {
+//        XSB_StrDefine(return_string);
+//        int rc;
+//        rc = xsb_query_string_string(query, &return_string, const_cast<char *>(";"));
+//
+//        if (rc == XSB_SUCCESS){
+//            XSB_StrDestroy(&return_string);
+//            xsb_close_query();
+//            return true;
+//        }
+//    });
 
     m.def("pyxsb_next_string", []() {
             XSB_StrDefine(return_string);

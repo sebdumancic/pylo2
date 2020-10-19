@@ -363,5 +363,3 @@ if __name__ == '__main__':
 
         del solver
 
-    #test1()
-    test5()
