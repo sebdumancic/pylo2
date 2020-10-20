@@ -134,7 +134,7 @@ with open("README.md", "r") as fh:
 
 
 setuptools.setup(name='pylo',
-                 version='0.2.1',
+                 version='0.2.2',
                  author='Sebastijan Dumancic',
                  author_email='sebastijan.dumancic@gmail.com',
                  description="Python wrapper for several Prolog engines",

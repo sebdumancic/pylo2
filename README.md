@@ -95,12 +95,14 @@ That's it! You should be able to use Pylo now.
 
 
 **STEP 4 (optional):** Test
-Navigate to the `testpy` folder and test the library:
-```shell script
-python test_gprolog.py
-python test_swipy.py
-python test_xsb.py
+```python
+from pylo.tests import all_swipl_tests, all_gnu_tests, all_xsb_tests
+
+all_swipl_tests()
+all_gnu_tests()
+all_xsb_tests("[path_to_XSB_folder]")  # the same folder for installation
 ```
+
 
 
 
