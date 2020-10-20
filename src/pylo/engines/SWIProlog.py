@@ -4,7 +4,7 @@
 # from src.pylo import Constant, Variable, Functor, Structure, List, Predicate, Atom, Negation, Clause, \
 #     c_pred, c_const, c_var, c_functor
 from .Prolog import Prolog
-from .language import Constant, Variable, Functor, Structure, Predicate, List, Atom, Negation, Conj, Clause, \
+from .language import Constant, Variable, Functor, Structure, Predicate, List, Atom, Negation, Clause, \
     list_func, Literal, c_pred, c_const, c_var, c_functor
 import typing
 import sys
