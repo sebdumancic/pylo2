@@ -78,7 +78,12 @@ export SWIPL_HOME=/usr/lib
 This folder should contain `libswipl.so` (Linux) file and the `swi-prolog` folder. 
 
 
-**STEP 2:** Clone this repository.
+**STEP 2:** Clone this repository. You need to pull it recursively to get the submodules.
+```shell script
+git clone https://github.com/sebdumancic/pylo2.git
+git submodule init
+git submodule update
+```
 
 
 **STEP 3:** Move to the folder you cloned the repository to.
@@ -305,10 +310,12 @@ from pylo.engines import GNUProlog
 pl_gnu = GNUProlog()
 
 # create XSB Prolog
-pl_xsb = XSBProlog("/Users/seb/Documents/programs/XSB")
+# you need to provide the path
+pl_xsb = XSBProlog("[path to the XSB folder used in installation]")
 
 # create SWI Prolog
-pl_swi = SWIProlog('/usr/local/bin/swipl')
+# the path to SWIPL binary is optional if it corresponds
+pl_swi = SWIProlog('/usr/local/bin/swipl') 
 ```
 
 Two things need to be noted:
