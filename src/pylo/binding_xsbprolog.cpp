@@ -85,9 +85,9 @@ PYBIND11_MODULE(pyxsb, m)
             rc = xsb_next_string(&return_string, const_cast<char *>(";"));
 
             if (rc == XSB_SUCCESS) {
-                char *result = return_string.string;
-                XSB_StrDestroy(&return_string);
-                return result;
+                //char *result = return_string.string;
+                //XSB_StrDestroy(&return_string);
+                return return_string.string;
             }
             else {
                 XSB_StrDestroy(&return_string);

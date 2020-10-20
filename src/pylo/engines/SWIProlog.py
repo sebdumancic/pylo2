@@ -626,6 +626,7 @@ if __name__ == '__main__':
 
         del pl
 
+
     def test4():
         pl = SWIProlog()
 
