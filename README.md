@@ -78,7 +78,12 @@ export SWIPL_HOME=/usr/lib
 This folder should contain `libswipl.so` (Linux) file and the `swi-prolog` folder. 
 
 
-**STEP 2:** Clone this repository.
+**STEP 2:** Clone this repository. You need to pull it recursively to get the submodules.
+```shell script
+git clone https://github.com/sebdumancic/pylo2.git
+git submodule init
+git submodule update
+```
 
 
 **STEP 3:** Move to the folder you cloned the repository to.
@@ -95,12 +100,14 @@ That's it! You should be able to use Pylo now.
 
 
 **STEP 4 (optional):** Test
-Navigate to the `testpy` folder and test the library:
-```shell script
-python test_gprolog.py
-python test_swipy.py
-python test_xsb.py
+```python
+from pylo.tests import all_swipl_tests, all_gnu_tests, all_xsb_tests
+
+all_swipl_tests()
+all_gnu_tests()
+all_xsb_tests("[path_to_XSB_folder]")  # the same folder for installation
 ```
+
 
 
 
@@ -303,10 +310,12 @@ from pylo.engines import GNUProlog
 pl_gnu = GNUProlog()
 
 # create XSB Prolog
-pl_xsb = XSBProlog("/Users/seb/Documents/programs/XSB")
+# you need to provide the path
+pl_xsb = XSBProlog("[path to the XSB folder used in installation]")
 
 # create SWI Prolog
-pl_swi = SWIProlog('/usr/local/bin/swipl')
+# the path to SWIPL binary is optional if it corresponds
+pl_swi = SWIProlog('/usr/local/bin/swipl') 
 ```
 
 Two things need to be noted:

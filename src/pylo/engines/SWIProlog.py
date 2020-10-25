@@ -1,11 +1,11 @@
-from src.pylo import (
-    Prolog
-)
-from src.pylo import Constant, Variable, Functor, Structure, List, Predicate, Atom, Negation, Clause, \
-    c_pred, c_const, c_var, c_functor
-# from .Prolog import Prolog
-# from .language import Constant, Variable, Functor, Structure, Predicate, List, Atom, Negation, Conj, Clause, \
-#     list_func, Literal, c_pred, c_const, c_var, c_functor
+# from src.pylo import (
+#     Prolog
+# )
+# from src.pylo import Constant, Variable, Functor, Structure, List, Predicate, Atom, Negation, Clause, \
+#     c_pred, c_const, c_var, c_functor
+from .Prolog import Prolog
+from .language import Constant, Variable, Functor, Structure, Predicate, List, Atom, Negation, Clause, \
+    list_func, Literal, c_pred, c_const, c_var, c_functor
 import typing
 import sys
 
@@ -370,8 +370,10 @@ class SWIProlog(Prolog):
         var_store = {}
         if isinstance(clause, Atom):
             swipl_object = _lit_to_swipy(clause, var_store)
-        else:
+        elif isinstance(clause, Clause):
             swipl_object = _cl_to_swipy(clause, var_store)
+        else:
+            raise Exception(f"can only assertz atoms or clauses (got {clause})")
 
         asserta = swipy.swipy_predicate("assertz", 1, None)
         query = swipy.swipy_open_query(asserta, swipl_object)
@@ -625,6 +627,7 @@ if __name__ == '__main__':
 
         del pl
 
+
     def test4():
         pl = SWIProlog()
 
@@ -705,9 +708,8 @@ if __name__ == '__main__':
         print(solver.query(edge(X, Y), edge(Y, Z), edge(Z,"W")))
         del solver
 
+    #test1()
 
-    test1()
-    test5()
 
 
 

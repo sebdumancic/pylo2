@@ -1,10 +1,10 @@
-from src.pylo import Prolog
-from src.pylo import Constant, Variable, Functor, Structure, List, Atom, Negation, Clause, \
-   c_const, c_pred, c_var, c_functor, c_symbol
+# from src.pylo import Prolog
+# from src.pylo import Constant, Variable, Functor, Structure, List, Atom, Negation, Clause, \
+#    c_const, c_pred, c_var, c_functor, c_symbol
 
-# from .Prolog import Prolog
-# from .language import Constant, Variable, Functor, Structure, List, Atom, Negation, Clause, \
-#     c_const, c_pred, c_var, c_functor, c_symbol
+from .Prolog import Prolog
+from .language import Constant, Variable, Functor, Structure, List, Atom, Negation, Clause, \
+    c_const, c_pred, c_var, c_functor, c_symbol
 
 import sys
 sys.path.append("../../../build")
@@ -465,7 +465,7 @@ if __name__ == '__main__':
         del solver
 
     #test1()
-    test5()
+    #test5()
 
 
 
