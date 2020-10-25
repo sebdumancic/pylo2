@@ -2,9 +2,9 @@
 #     Prolog
 # )
 # from src.pylo import Constant, Variable, Functor, Structure, List, Predicate, Atom, Negation, Clause, \
-#     global_context
+#     c_var, c_pred, c_functor, c_const, c_symbol
 from .Prolog import Prolog
-from .language import Variable, Structure, List, Atom, Clause, global_context
+from .language import Variable, Structure, List, Atom, Clause, c_var, c_pred, c_functor, c_const, c_symbol
 import sys
 
 #sys.path.append("../../build")
@@ -33,14 +33,14 @@ def _is_structure(term: str):
 
 def _pyxsb_string_to_const_or_var(term: str):
     if term[0].islower():
-        return global_context.get_symbol(term)
+        return c_const(term)
     elif term.isnumeric():
         if '.' in term:
             return float(term)
         else:
             return int(term)
     else:
-        return global_context.get_variable(term)
+        return c_var(term)
 
 
 def _extract_arguments_from_compound(term: str):
@@ -74,7 +74,7 @@ def _pyxsb_string_to_structure(term: str):
     first_bracket = term.find('(')
     functor = term[:first_bracket]
     args = [_pyxsb_string_to_pylo(x) for x in _extract_arguments_from_compound(term)]
-    functor = global_context.get_symbol(functor, arity=len(args))
+    functor = c_symbol(functor, arity=len(args))
 
     return Structure(functor, args)
 
@@ -180,14 +180,14 @@ if __name__ == '__main__':
     def test1():
         pl = XSBProlog("/Users/seb/Documents/programs/XSB")
 
-        p = global_context.get_predicate("p", 2)
-        f = global_context.get_functor("t", 3)
+        p = c_pred("p", 2)
+        f = c_functor("t", 3)
         f1 = p("a", "b")
 
         pl.assertz(f1)
 
-        X = global_context.get_variable("X")
-        Y = global_context.get_variable("Y")
+        X = c_var("X")
+        Y = c_var("Y")
 
         query = p(X, Y)
 
@@ -212,7 +212,7 @@ if __name__ == '__main__':
 
         l = List([1, 2, 3, 4, 5])
 
-        member = global_context.get_predicate("member", 2)
+        member = c_pred("member", 2)
         pl.use_module("lists", predicates=[member])
 
         query2 = member(X, l)
@@ -220,7 +220,7 @@ if __name__ == '__main__':
         rv = pl.query(query2)
         print("all solutions to list membership ", rv)
 
-        r = global_context.get_predicate("r", 2)
+        r = c_pred("r", 2)
         f4 = r("a", l)
         f5 = r("a", "b")
 
@@ -232,7 +232,7 @@ if __name__ == '__main__':
         rv = pl.query(query3)
         print("all solutions after adding list ", rv)
 
-        q = global_context.get_predicate("q", 2)
+        q = c_pred("q", 2)
         cl = (q("X", "Y") <= r("X", "Y") & r("X", "Z"))
 
         pl.assertz(cl)
@@ -246,12 +246,12 @@ if __name__ == '__main__':
     def test2():
         pl = XSBProlog("/Users/seb/Documents/programs/XSB")
 
-        person = global_context.get_predicate("person", 1)
-        friends = global_context.get_predicate("friends", 2)
-        stress = global_context.get_predicate("stress", 1)
-        influences = global_context.get_predicate("influences", 2)
-        smokes = global_context.get_predicate("smokes", 1)
-        asthma = global_context.get_predicate("asthma", 1)
+        person = c_pred("person", 1)
+        friends = c_pred("friends", 2)
+        stress = c_pred("stress", 1)
+        influences = c_pred("influences", 2)
+        smokes = c_pred("smokes", 1)
+        asthma = c_pred("asthma", 1)
 
         pl.assertz(person("a"))
         pl.assertz(person("b"))
@@ -291,12 +291,12 @@ if __name__ == '__main__':
     def test3():
         pl = XSBProlog("/Users/seb/Documents/programs/XSB")
 
-        bongard = global_context.get_predicate('bongard', 2)
-        circle = global_context.get_predicate('circle', 2)
-        inp = global_context.get_predicate('in', 3)
-        config = global_context.get_predicate('config', 3)
-        triangle = global_context.get_predicate('triangle', 2)
-        square = global_context.get_predicate('square', 2)
+        bongard = c_pred('bongard', 2)
+        circle = c_pred('circle', 2)
+        inp = c_pred('in', 3)
+        config = c_pred('config', 3)
+        triangle = c_pred('triangle', 2)
+        square = c_pred('square', 2)
 
         pl.assertz(bongard(2, "la"))
         pl.assertz(circle(2, "o3"))
@@ -310,10 +310,10 @@ if __name__ == '__main__':
         pl.assertz(inp(2, "o4", "o5"))
         pl.assertz(inp(2, "o2", "o3"))
 
-        A = global_context.get_variable("A")
-        B = global_context.get_variable("B")
-        C = global_context.get_variable("C")
-        D = global_context.get_variable("D")
+        A = c_var("A")
+        B = c_var("B")
+        C = c_var("C")
+        D = c_var("D")
 
         #pl.assertz((bongard(A,"la") <= triangle(A,C) & inp(A, C, D)))
 
@@ -326,16 +326,16 @@ if __name__ == '__main__':
     def test5():
         solver = XSBProlog("/Users/seb/Documents/programs/XSB")
 
-        edge = global_context.get_predicate("edge", 2)
-        path = global_context.get_predicate("path", 2)
+        edge = c_pred("edge", 2)
+        path = c_pred("path", 2)
 
         f1 = edge("v1", "v2")
         f2 = edge("v1", "v3")
         f3 = edge("v2", "v4")
 
-        X = global_context.get_variable("X")
-        Y = global_context.get_variable("Y")
-        Z = global_context.get_variable("Z")
+        X = c_var("X")
+        Y = c_var("Y")
+        Z = c_var("Z")
 
         cl1 = (path("X", "Y") <= edge("X", "Y"))
         cl2 = (path("X", "Y") <= edge("X", "Z") & path("Z", "Y"))
@@ -363,4 +363,3 @@ if __name__ == '__main__':
 
         del solver
 
-    test5()

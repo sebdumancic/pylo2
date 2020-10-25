@@ -400,6 +400,7 @@ class Context:
         self._vars = {}
         self._predicates = {}
         self._functors = {}
+        self._literals = {}
 
     def get_constant(self, name: str):
         if name not in self._consts:
@@ -463,7 +464,78 @@ class Context:
                     raise Exception(f"Cannot uniquely identify predicate symbol {name}")
                 return self._predicates[name][ks[0]]
         else:
-            raise Exception(f"Cannot identify symbol {name}")
+            # assume we need a new functor symbol
+            assert 'arity' in kwargs, "Cannot create new symbol without "
+            arity = kwargs['arity']
+            func = Functor(name, arity)
+            self._functors[name][arity] = func
+            return func
+
+    def get_literal(self, predicate: Predicate, args: Sequence[Union[Term, int, float]]):
+        sig = f"{predicate.get_name()}/{','.join([str(x) for x in args])}"
+
+        if sig not in self._literals:
+            self._literals[sig] = Atom(predicate, args)
+
+        return self._literals[sig]
 
 
 global_context = Context()
+
+
+def _get_proper_context(ctx) -> Context:
+    if ctx is None:
+        global global_context
+        return global_context
+    else:
+        return ctx
+
+
+def c_pred(name, arity, ctx: Context = None) -> Predicate:
+    ctx = _get_proper_context(ctx)
+    return ctx.get_predicate(name, arity)
+
+
+def c_const(name, ctx: Context = None) -> Constant:
+    ctx = _get_proper_context(ctx)
+    return ctx.get_constant(name)
+
+
+def c_var(name, ctx: Context = None) -> Variable:
+    ctx = _get_proper_context(ctx)
+    return ctx.get_variable(name)
+
+
+def c_literal(
+        predicate: Predicate, arguments: Sequence[Term], ctx: Context = None
+) -> Atom:
+    ctx = _get_proper_context(ctx)
+    return ctx.get_literal(predicate, arguments)
+
+
+def c_fresh_var(
+        ctx: Context = None
+) -> Variable:
+    ctx = _get_proper_context(ctx)
+    return ctx.get_fresh_variable()
+
+
+def c_functor(
+        name: str,
+        arity: int = None,
+        ctx: Context = None
+) -> Functor:
+    ctx = _get_proper_context(ctx)
+    return ctx.get_functor(name, arity)
+
+
+def c_symbol(
+        name: str,
+        arity: int = None,
+        ctx: Context = None
+) -> Union[Term, Functor, Predicate]:
+    ctx = _get_proper_context(ctx)
+    if arity is not None:
+        return ctx.get_symbol(name, arity=arity)
+    else:
+        return ctx.get_symbol(name)

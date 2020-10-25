@@ -1,10 +1,10 @@
 # from src.pylo import Prolog
 # from src.pylo import Constant, Variable, Functor, Structure, List, Atom, Negation, Clause, \
-#     global_context
+#    c_const, c_pred, c_var, c_functor, c_symbol
 
 from .Prolog import Prolog
 from .language import Constant, Variable, Functor, Structure, List, Atom, Negation, Clause, \
-    global_context
+    c_const, c_pred, c_var, c_functor, c_symbol
 
 import sys
 sys.path.append("../../../build")
@@ -115,12 +115,12 @@ def _cl_to_pygp(clause: Clause):
 
 def _pygp_to_const(term):
     # global global_context
-    return global_context.get_constant(pygprolog.pygp_Rd_String(term))
+    return c_const(pygprolog.pygp_Rd_String(term))
 
 
 def _pygp_atm_to_symbol(term):
     # global global_context
-    return global_context.get_symbol(pygprolog.pygp_Rd_String(term))
+    return c_symbol(pygprolog.pygp_Rd_String(term))
 
 
 def _pygp_to_number(term):
@@ -155,7 +155,7 @@ def _pygp_to_structure(term):
 
     # global global_context
 
-    return Structure(global_context.get_functor(functor, arity), args)
+    return Structure(c_functor(functor, arity), args)
 
 
 def _read_pygp(term, pygp_term_to_var={}):
@@ -370,14 +370,14 @@ if __name__ == '__main__':
     def test1():
         pl = GNUProlog()
 
-        p = global_context.get_predicate("p", 2)
-        f = global_context.get_functor("t", 3)
+        p = c_pred("p", 2)
+        f = c_functor("t", 3)
         f1 = p("a", "b")
 
         pl.assertz(f1)
 
-        X = global_context.get_variable("X")
-        Y = global_context.get_variable("Y")
+        X = c_var("X")
+        Y = c_var("Y")
 
         query = p(X, Y)
 
@@ -402,14 +402,14 @@ if __name__ == '__main__':
 
         l = List([1, 2, 3, 4, 5])
 
-        member = global_context.get_predicate("member", 2)
+        member = c_pred("member", 2)
 
         query2 = member(X, l)
 
         rv = pl.query(query2)
         print("all solutions to list membership ", rv)
 
-        r = global_context.get_predicate("r", 2)
+        r = c_pred("r", 2)
         f4 = r("a", l)
         f5 = r("a", "b")
 
@@ -421,19 +421,21 @@ if __name__ == '__main__':
         rv = pl.query(query3)
         print("all solutions after adding list ", rv)
 
+        del pl
+
     def test5():
         solver = GNUProlog()
 
-        edge = global_context.get_predicate("edge", 2)
-        path = global_context.get_predicate("path", 2)
+        edge = c_pred("edge", 2)
+        path = c_pred("path", 2)
 
         f1 = edge("v1", "v2")
         f2 = edge("v1", "v3")
         f3 = edge("v2", "v4")
 
-        X = global_context.get_variable("X")
-        Y = global_context.get_variable("Y")
-        Z = global_context.get_variable("Z")
+        X = c_var("X")
+        Y = c_var("Y")
+        Z = c_var("Z")
 
         cl1 = path(X, Y) <= edge(X, Y)
         cl2 = path(X, Y) <= edge(X, Z) & path(Z, Y)
@@ -462,7 +464,8 @@ if __name__ == '__main__':
         print(solver.query(edge(X, Y), edge(Y, Z), edge(Z,"W")))
         del solver
 
-    test5()
+    #test1()
+    #test5()
 
 
 
