@@ -4,7 +4,7 @@
 # from src.pylo import Constant, Variable, Functor, Structure, List, Predicate, Atom, Negation, Clause, \
 #     c_var, c_pred, c_functor, c_const, c_symbol
 from .Prolog import Prolog
-from .language import Variable, Structure, List, Atom, Clause, c_var, c_pred, c_functor, c_const, c_symbol
+from .language import Variable, Structure, List, Atom, Clause, c_var, c_pred, c_functor, c_const, c_symbol, is_valid_constant, is_surrounded_by_single_quotes
 import sys
 
 #sys.path.append("../../build")
@@ -22,23 +22,31 @@ def _is_list(term: str):
 
 
 def _is_structure(term: str):
-    first_bracket = term.find('(')
-
-    if first_bracket == -1:
+    if is_surrounded_by_single_quotes(term):
         return False
     else:
-        tmp = term[:first_bracket]
-        return all([x.isalnum() for x in tmp]) and tmp[0].isalpha()
+        first_bracket = term.find('(')
+
+        if first_bracket == -1:
+            return False
+        else:
+            try:
+                tmp = term[:first_bracket]
+                return all([x.isalnum() for x in tmp]) and tmp[0].isalpha()
+            except Exception as err:
+                print(term)
+                raise err
 
 
 def _pyxsb_string_to_const_or_var(term: str):
-    if term[0].islower():
-        return c_const(term)
-    elif term.isnumeric():
-        if '.' in term:
-            return float(term)
+    if is_valid_constant(term):
+        if term.isnumeric():
+            if '.' in term:
+                return float(term)
+            else:
+                return int(term)
         else:
-            return int(term)
+            return c_const(term)
     else:
         return c_var(term)
 
@@ -48,6 +56,9 @@ def _extract_arguments_from_compound(term: str):
         term = term[1:-1]  # remove '[' and ']'
     else:
         first_bracket = term.find('(')
+        if term[-1] != ')':
+            raise Exception(f"incorrect compound: {term}")
+
         term = term[first_bracket+1:-1] # remove outer brackets
 
     args = []
