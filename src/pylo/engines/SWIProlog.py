@@ -154,6 +154,7 @@ def _lit_to_swipy(clause: Atom, lit_var_store: Dict[Variable, int]):
         functor = _functor_to_swipy(clause.get_predicate())
         compound_arg = swipy.swipy_new_term_refs(clause.get_predicate().get_arity())
         args = clause.get_arguments()
+
         _to_swipy_ref(args[0], compound_arg, lit_var_store)
         for i in range(1, clause.get_predicate().get_arity()):
             _to_swipy_ref(args[i], compound_arg+i, lit_var_store)
@@ -388,7 +389,7 @@ class SWIProlog(Prolog):
             lit = _cl_to_swipy(clause, {})
 
         retract = swipy.swipy_predicate("retract", 1, None)
-        query = swipy.swipy_open_query(retract, lit)
+        query = swipy.swipy_open_query(retract, swipl_object)
         r = swipy.swipy_next_solution(query)
         swipy.swipy_close_query(query)
 

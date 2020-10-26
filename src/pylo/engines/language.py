@@ -3,6 +3,10 @@ from typing import Sequence, Union
 import typing
 
 
+class InputError(Exception):
+    pass
+
+
 class Term(ABC):
 
     def __init__(self, name: str):
@@ -24,17 +28,69 @@ class Term(ABC):
         return self._name
 
 
+def is_float(value: str):
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
+
+
+def starts_with_digit(name: str):
+    return name[0].isdigit()
+
+
+def starts_with_lower_case(name: str):
+    return name[0].islower()
+
+
+def is_surrounded_by_single_quotes(name: str):
+    quote_char = "'"
+    return len(name) >= 3 and name[0] == quote_char and name[-1] == quote_char and quote_char not in name[1:-1]
+
+
+def is_valid_constant(name: str):
+    if len(name) == 0:
+        return False
+
+    return (starts_with_digit(name)
+            or starts_with_lower_case(name)
+            or is_float(name)
+            or is_surrounded_by_single_quotes(name)
+            )
+
+def starts_with_upper_case(name: str):
+    return name[0].isupper()
+
+
+def starts_with_underscore(name: str):
+    return name[0] == '_'
+
+
+def is_valid_variable(name: str):
+    if len(name) == 0:
+        return False
+
+    return (starts_with_upper_case(name)
+            or starts_with_underscore(name)
+            )
+
 class Constant(Term):
 
-    def __init__(self, name):
-        assert name.islower(), f"Constants should be name with lowercase {name}"
+    def __init__(self, name: str):
+        if len(name) == 0:
+            raise InputError('empty Constant')
+        assert is_valid_constant(name), f"Constants should be name with lowercase {name}"
         super().__init__(name)
 
 
 class Variable(Term):
 
-    def __init__(self, name):
-        assert name.isupper(), f"Variables should be name uppercase {name}"
+    def __init__(self, name: str):
+        if len(name) == 0:
+            raise InputError("empty variable")
+
+        assert is_valid_variable(name), f"Variables should be name uppercase {name}"
         super().__init__(name)
 
 
@@ -67,10 +123,13 @@ class Functor:
         global global_context
         elem: Union[str, "Constant", "Variable", "Structure", "List", int, float]
         for elem in args:
+            # STARTS with lower case
             if isinstance(elem, str) and elem.islower():
                 args_to_use.append(global_context.get_constant(elem))
-            elif isinstance(elem, str) and elem.isupper():
+            # STARTS with uppercase
+            elif isinstance(elem, str) and is_valid_variable(name):
                 args_to_use.append(global_context.get_variable(elem))
+            # Is a Constant, Variable, Structure, List, int or Float
             elif isinstance(elem, (Constant, Variable, Structure, List, int, float)):
                 args_to_use.append(elem)
             else:
@@ -177,9 +236,9 @@ class Predicate:
                     argsToUse.append(float(elem))
                 else:
                     argsToUse.append(int(elem))
-            if isinstance(elem, str) and elem[0].isupper():
+            elif isinstance(elem, str) and elem[0].isupper():
                 argsToUse.append(global_context.get_variable(elem))
-            elif isinstance(elem, str) and elem[0].islower():
+            elif isinstance(elem, str) and is_valid_constant(elem):
                 argsToUse.append(global_context.get_constant(elem))
             elif isinstance(elem, (Constant, Variable, Structure, Predicate)):
                 argsToUse.append(elem)
