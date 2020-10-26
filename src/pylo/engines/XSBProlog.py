@@ -172,7 +172,8 @@ class XSBProlog(Prolog):
 
         all_solutions = []
         while res and max_solutions != 0:
-            vals = [x for x in res.strip().split(";")]
+            vals = [f"'{x}'" for x in res.strip().split(";")]
+            # print(vals)
             var_assignments = [_pyxsb_string_to_pylo(x) for x in vals]
             all_solutions.append(dict([(v, s) for v, s in zip(vars_of_interest, var_assignments)]))
 
