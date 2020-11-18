@@ -1,0 +1,9 @@
+# 0.3.1.
+ - fixed correct name check in `Constant`
+ - fixed correct name check in `Variable`
+
+# 0.3.0
+
+ - added kanren solver (`pylo.engines.kanren`)
+ - added datalog solver (`pylo.engines.datalog`)
+ - moved prolog engines into `pylo.engines.prolog`

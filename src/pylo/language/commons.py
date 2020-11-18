@@ -144,6 +144,7 @@ class Constant(Term):
     """
 
     def __init__(self, name, sym_type):
+        assert name[0].islower(), f"Constants should be name with lowercase {name}"
         super().__init__(name, sym_type)
         self._id = len(sym_type)
         self.type.add(self)
@@ -178,6 +179,7 @@ class Variable(Term):
     """
 
     def __init__(self, name: str, sym_type: Type = None):
+        assert name[0].isupper(), f"Variables should be name uppercase {name}"
         if sym_type is None:
             sym_type = c_type("thing")
         if name[0].islower():
