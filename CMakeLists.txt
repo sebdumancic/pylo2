@@ -11,9 +11,34 @@ option(GPROLOG "Compile GNU-Prolog" OFF)
 option(XSBPROLOG "Compile XSB Prolog" OFF)
 option(SWIPL "Compile SWI Prolog" OFF)
 
+get_filename_component(LIBFOLD_PATH "lib" REALPATH)
+get_filename_component(PYBINDFOLD_PATH "lib/pybind11" REALPATH)
+
 message("building:\n\tGNU PROLOG: ${GPROLOG}\n\tXSB PROLOG: ${XSBPROLOG}\n\tSWIPL: ${SWIPL}")
 
-add_subdirectory(lib/pybind11)
+message("!! lib path: ${LIBFOLD_PATH}")
+message("!! pybind11 path: ${PYBINDFOLD_PATH}")
+
+if (EXISTS "${LIBFOLD_PATH}")
+    if (EXISTS "${PYBINDFOLD_PATH}")
+        message("!! all pybind folders exists; cloning repo")
+        execute_process(COMMAND git clone https://github.com/pybind/pybind11.git ${PYBINDFOLD_PATH})
+    else()
+        message("!! creating pybind11 folder")
+        execute_process(COMMAND "mkdir ${PYBINDFOLD_PATH}")
+        execute_process(COMMAND "git clone https://github.com/pybind/pybind11.git ${PYBINDFOLD_PATH}")
+    endif()
+else()
+    message("!! no lib nor pybind11 folder; creating both!")
+    execute_process(COMMAND "mkdir ${LIBFOLD_PATH}")
+    execute_process(COMMAND "mkdir ${PYBINDFOLD_PATH}")
+    execute_process(COMMAND "git clone https://github.com/pybind/pybind11.git ${PYBINDFOLD_PATH}")
+endif()
+
+add_subdirectory("${PYBINDFOLD_PATH}")
+
+
+#add_subdirectory(lib/pybind11)
 
 if (CIAO)
 pybind11_add_module(ciaopy ${SOURCES} "${SOURCE_DIR}/binding_ciao.cpp")
