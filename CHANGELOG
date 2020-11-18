@@ -1,6 +1,7 @@
 # 0.3.1.
  - fixed correct name check in `Constant`
  - fixed correct name check in `Variable`
+ - starting SWIPL in quiet mode
 
 # 0.3.0
 
