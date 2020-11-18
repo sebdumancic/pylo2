@@ -428,12 +428,12 @@ class Predicate:
 
     def __call__(self, *args, **kwargs):
         assert len(args) == self.get_arity()
-        assert all([isinstance(x, (Constant, Variable, Structure, str)) for x in args])
+        assert all([isinstance(x, (Constant, Variable, Structure, str, int, float)) for x in args])
         global global_context
 
         args = [
             x
-            if isinstance(x, (Constant, Variable, Structure))
+            if isinstance(x, (Constant, Variable, Structure, int, float))
             else self._map_to_object(x, ind)
             for ind, x in enumerate(args)
         ]

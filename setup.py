@@ -145,5 +145,11 @@ setuptools.setup(name='pylo',
                  package_dir={'':'src'},
                  ext_modules=[CMakeExtension('pylo')],
                  cmdclass=dict(build_ext=CMakeBuild),
+                 install_requires=[
+                     'networkx',
+                     'miniKanren',
+                     'pygraphviz',
+                     'z3-solver'
+                 ],
                  python_requires=">=3.6"
                  )

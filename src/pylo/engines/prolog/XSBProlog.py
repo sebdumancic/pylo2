@@ -1,10 +1,10 @@
 # from src.pylo import (
 #     Prolog
 # )
-# from src.pylo import Constant, Variable, Functor, Structure, List, Predicate, Atom, Negation, Clause, \
-#     c_var, c_pred, c_functor, c_const, c_symbol
-from pylo.engines.prolog import Prolog
-from pylo.language.lp import Variable, Structure, List, Atom, Clause, c_var, c_pred, c_functor, c_const, c_symbol
+from pylo.language.lp import Constant, Variable, Functor, Structure, List, Predicate, Atom, Not, Clause, \
+    c_var, c_pred, c_functor, c_const, c_symbol
+from pylo.engines.prolog.prologsolver import Prolog
+#from pylo.language.lp import Variable, Structure, List, Atom, Clause, c_var, c_pred, c_functor, c_const, c_symbol
 import sys
 
 #sys.path.append("../../build")
@@ -362,4 +362,7 @@ if __name__ == '__main__':
         print(solver.query(edge(X, Y), edge(Y, Z), edge(Z,"W")))
 
         del solver
+
+    #test1()
+    #test5()
 

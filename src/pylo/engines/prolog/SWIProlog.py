@@ -1,11 +1,11 @@
-# from src.pylo import (
-#     Prolog
-# )
-# from src.pylo import Constant, Variable, Functor, Structure, List, Predicate, Atom, Negation, Clause, \
-#     c_pred, c_const, c_var, c_functor
-from pylo.engines.prolog import Prolog
-from pylo.language.lp import Constant, Variable, Functor, Structure, Predicate, List, Atom, Not, Clause, \
-    list_func, Literal, c_pred, c_const, c_var, c_functor
+from pylo.engines.prolog.prologsolver import (
+    Prolog
+)
+from pylo.language.lp import Constant, Variable, Functor, Structure, List, Predicate, Atom, Not, Clause, \
+    c_pred, c_const, c_var, c_functor
+# from .prologsolver import Prolog
+# from pylo.language.lp import Constant, Variable, Functor, Structure, Predicate, List, Atom, Not, Clause, \
+#     list_func, Literal, c_pred, c_const, c_var, c_functor
 import typing
 import sys
 
@@ -708,6 +708,7 @@ if __name__ == '__main__':
         del solver
 
     #test1()
+    #test5()
 
 
 

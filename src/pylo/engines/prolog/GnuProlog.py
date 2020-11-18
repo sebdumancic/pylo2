@@ -1,8 +1,8 @@
-# from src.pylo import Prolog
-# from src.pylo import Constant, Variable, Functor, Structure, List, Atom, Negation, Clause, \
+# from src.pylo.engines.prolog import Prolog
+# from src.pylo.language.lp import Constant, Variable, Functor, Structure, List, Atom, Not, Clause, \
 #    c_const, c_pred, c_var, c_functor, c_symbol
 
-from pylo.engines.prolog import Prolog
+from pylo.engines.prolog.prologsolver import Prolog
 from pylo.language.lp import Constant, Variable, Functor, Structure, List, Atom, Not, Clause, \
     c_const, c_pred, c_var, c_functor, c_symbol
 
