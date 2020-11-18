@@ -79,6 +79,15 @@ class MuZ(DatalogSolver):
         cl_muz = rule.as_muz()
         self._solver.rule(cl_muz[0], cl_muz[1])
 
+    def asserta(self, clause: Union[Atom, Clause]):
+        if isinstance(clause, Atom):
+            self.assert_fact(clause)
+        else:
+            self.assert_rule(clause)
+
+    def assertz(self, clause: Union[Atom, Clause]):
+        self.asserta(clause)
+
     def has_solution(self, *query: Union[Atom, Not]):
         body_atms = [x.as_muz() for x in query]
         res = self._solver.query(*body_atms)

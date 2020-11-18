@@ -53,6 +53,15 @@ class MiniKanren(LPSolver):
 
             rule[0].get_head().get_predicate().add_engine_object((KANREN_LOGPY, obj))
 
+    def asserta(self, clause: Union[Atom, Clause, Sequence[Clause]]):
+        if isinstance(clause, Atom):
+            self.assert_fact(clause)
+        else:
+            self.assert_rule(clause)
+
+    def assertz(self,  clause: Union[Atom, Clause, Sequence[Clause]]):
+        self.asserta(clause)
+
     def _query(self, num_solutions, *atoms: Atom):
         # find variables
         vars = {}
