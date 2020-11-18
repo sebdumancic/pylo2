@@ -1,14 +1,17 @@
-`pylo` is a Python front-end for several Prolog engines.
-It allows you to write your program once and execute it with different Prolog engines simply by switching the back-end.
+`pylo` is a Python front-end for several logic programming engines.
+This includes several Prolog engines, but also different flavours of logic programming such as relational programming (kanren) and Datalog.
+It allows you to write your program once and execute it with different engines simply by switching the back-end.
 
 
 **Supported OS:** The library was tested on Linux (Ubuntu) and OSX.
 
-# Supported Prolog engines
+# Supported engines
 
-Supported Prolog engines:
+## Prolog engines
+
+Currently supported:
  - [SWIPL](https://www.swi-prolog.org/)
- - [GNU Prolog](http://www.gprolog.org) (works only on OSX so far; GNNU PROLOG's foreign function interface does not compile properly on Linux)
+ - [GNU Prolog](http://www.gprolog.org) (works only on OSX so far; GNU PROLOG's foreign function interface does not compile properly on Linux)
  - [XSB Prolog](http://xsb.sourceforge.net/) 
  
 Under development:
@@ -21,6 +24,48 @@ Maybe supported in the future:
   - [ ] [YAP](http://cracs.fc.up.pt/~nf/Docs/Yap/yap.html) and [C interface](http://cracs.fc.up.pt/~nf/Docs/Yap/yap.html#SEC150)
   - [ ] [FASSIL](https://dectau.uclm.es/fasill/)
   - [ ] [Bousi Prolog](https://dectau.uclm.es/bousi-prolog/)
+  
+## Datalog engines
+
+A subset of Prolog without functors/structures
+
+Currently supported:
+ - [muZ (Z3's datalog engine)](http://www.cs.tau.ac.il/~msagiv/courses/asv/z3py/fixedpoints-examples.htm)
+ 
+Considering:
+ - [pyDatalog](https://sites.google.com/site/pydatalog/home)
+
+
+## Relational programming engines
+
+Prolog without side-effects (cut and so on)
+
+Currently supported:
+ - [miniKanren](https://github.com/pythological/kanren); seems to be actively maintained
+ 
+
+## Deductive database engines
+
+Currently supported:
+ - none yet
+ 
+Considering:
+ - [Grakn](https://grakn.ai/)
+ 
+ 
+## Answer set programming
+
+Currently supported:
+  - none yet
+  
+Considering:
+   - [aspirin](https://github.com/potassco/asprin)
+   - [clorm](https://github.com/potassco/clorm)
+   - [asp-lite](https://github.com/lorenzleutgeb/asp-lite)
+   - [hexlite](https://github.com/hexhex/hexlite)
+   - [clyngor](https://github.com/aluriak/clyngor)
+
+
 
 
 
@@ -36,7 +81,7 @@ To install the support for **GNU Prolog**, you need to provide the `GNUPROLOG_HO
 # For OSX with default configuration (installed from sources)
 export GNUPROLOG_HOME=/usr/local/gprolog-1.4.5
 # On Ubuntu
-export GNUPROLOG_HOMe=/usr/lib/gprolog-1.4.5
+export GNUPROLOG_HOME=/usr/lib/gprolog-1.4.5
 ```
 You are looking for the folder that contains the following:
 ```text
@@ -211,7 +256,7 @@ Pylo allows you to conveniently specify the knowledge base and the query it with
 All basic constructs (constants, variables, functors and predicates) should be created using the *global context* (functions prefixed with `c_`: `c_const`, `c_pred`, `c_var`, `c_functor`), which ensures that there are not duplicates. 
 
 ```python
-from pylo import c_pred, c_var, c_const, c_functor, Atom, Clause, Conj, Structure, List
+from pylo.language.lp import c_pred, c_var, c_const, c_functor, Atom, Clause, Body, Structure, List
 
 # create some constants 
 luke = c_const("luke")             
@@ -242,8 +287,8 @@ Y = c_var("Y")
 head = Atom(parent, [X,Y])                           
 body1 = Atom(father, [X,Y])
 body2 = Atom(mother, [X,Y])
-rule1 = Clause(head, Conj(body1))
-rule2 = Clause(head, Conj(body2))
+rule1 = Clause(head, Body(body1))
+rule2 = Clause(head, Body(body2))
 
 
 # create structures
@@ -263,7 +308,7 @@ Pylo also provides many convenient shortcuts for less tedious construction of kn
 The above example could have been constructed in the following way
 
 ```python
-from pylo import c_pred, c_const, c_var, c_functor, List
+from pylo.language.lp import c_pred, c_const, c_var, c_functor, List
 
 # construct predicates
 father = c_pred("father", 2)
@@ -301,9 +346,9 @@ rule2 = parent("X", "Y") <= mother("X", "Y")
 
 The first step is to create a Prolog instance
 ```python
-from pylo.engines import SWIProlog
-from pylo.engines import XSBProlog
-from pylo.engines import GNUProlog
+from pylo.engines.prolog import SWIProlog
+from pylo.engines.prolog import XSBProlog
+from pylo.engines.prolog import GNUProlog
 
 
 # Create GNU Prolog instance
@@ -316,6 +361,14 @@ pl_xsb = XSBProlog("[path to the XSB folder used in installation]")
 # create SWI Prolog
 # the path to SWIPL binary is optional if it corresponds
 pl_swi = SWIProlog('/usr/local/bin/swipl') 
+
+# create datalog instance
+from pylo.engines.datalog import MuZ
+solver_data = MuZ()
+
+# create kanren instance
+from pylo.engines.kanren import MiniKanren
+solver_kan = MiniKanren()
 ```
 
 Two things need to be noted:
@@ -325,7 +378,7 @@ Two things need to be noted:
  
 All Prolog engines have a unified interface:
 ```python
-from pylo import Prolog
+from pylo.engines.prolog import Prolog
 pl = Prolog()
 
 # consult file
@@ -363,8 +416,8 @@ pl.query()
 
 A more elaborate example
 ```python
-from pylo.engines import XSBProlog
-from pylo import c_pred 
+from pylo.engines.prolog import XSBProlog
+from pylo.language.lp import c_pred 
 
 pl = XSBProlog("/Users/seb/Documents/programs/XSB")
 
