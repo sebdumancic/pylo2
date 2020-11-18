@@ -1,0 +1,4 @@
+miniKanren
+z3-solver
+networkx
+pygraphviz
