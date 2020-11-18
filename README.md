@@ -146,11 +146,13 @@ That's it! You should be able to use Pylo now.
 
 **STEP 4 (optional):** Test
 ```python
-from pylo.tests import all_swipl_tests, all_gnu_tests, all_xsb_tests
+from pylo.tests import all_swipl_tests, all_gnu_tests, all_xsb_tests, test_kanren, test_datalog
 
 all_swipl_tests()
 all_gnu_tests()
 all_xsb_tests("[path_to_XSB_folder]")  # the same folder for installation
+test_kanren()
+test_datalog()
 ```
 
 
@@ -217,6 +219,10 @@ If you want to build the support for several Prolog engines, you have to compile
 ```shell script
     export LD_LIBRARY_PATH=/Users/seb/.ciaoroot/master/build/eng/ciaoengine/objs/DARWINx86_64/
 ```
+
+## Z3
+
+Z3Py scripts stored in arbitrary directories can be executed if the 'build/python' directory is added to the PYTHONPATH environment variable and the 'build' directory is added to the DYLD_LIBRARY_PATH environment variable.
 
 
 # Usage
