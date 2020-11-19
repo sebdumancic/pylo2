@@ -22,6 +22,45 @@ build_gnu = os.environ.get('GNUPROLOG_HOME')
 build_xsb = os.environ.get('XSB_HOME')
 build_swi = os.environ.get("SWIPL_HOME")
 
+# check if gnu-prolog is installed on the system
+if build_gnu is None:
+    results = subprocess.run(['which', 'gprolog'], stdout=subprocess.PIPE)
+    result = results.stdout.decode('utf-8').strip()
+
+    if len(result) > 1:
+        result = result.replace("/bin/gprolog", "")
+
+        if is_mac:
+            apd = [x for x in os.listdir(result) if x.startswith('gprolog')]
+            print(f"found GNU: {result}/{apd}")
+            build_gnu = f"{result}/{apd[0]}"
+        if is_linux:
+            result = f"{result}/lib"
+            apd = [x for x in os.listdir(result) if x.startswith('gprolog')]
+            print(f"found GNU: {result}/{apd}")
+            build_gnu = f"{result}/{apd[0]}"
+
+
+# check if XSB is installed on the system
+if build_xsb is None:
+    results = subprocess.run(['which', 'xsb'], stdout=subprocess.PIPE)
+    result = results.stdout.decode('utf-8').strip()
+
+    if len(result) > 1:
+        result = result.replace("/bin/xsb", "")
+        build_xsb = result
+
+# check if swipl is installed on the system
+if build_swi is None:
+    results = subprocess.run(['which', 'swipl'], stdout=subprocess.PIPE)
+    result = results.stdout.decode('utf-8').strip()
+
+    if len(result) > 1:
+        # it does not matter what it is because the paths are automatically identified in CMakeLists.txt
+        build_swi = result
+
+
+
 # discover the correct paths
 if build_gnu:
     gnu_var_path = build_gnu
@@ -34,13 +73,14 @@ if build_xsb:
     os.environ['XSB_LIB_PATH'] = arch_dir
 
 if build_swi:
-    swi_path = build_swi
-    if is_mac:
-        swi_path += "/lib"
-        arch_dir = [x.path for x in os.scandir(swi_path) if x.is_dir()][0]
-    else:
-        arch_dir = swi_path
-    os.environ['SWIPL_LIB_PATH'] = arch_dir
+    # !! not needed anymore - everything set up in the CMakeLists.txt
+    # swi_path = build_swi
+    # if is_mac:
+    #     swi_path += "/lib"
+    #     arch_dir = [x.path for x in os.scandir(swi_path) if x.is_dir()][0]
+    # else:
+    #     arch_dir = swi_path
+    os.environ['SWIPL_LIB_PATH'] = build_swi #arch_dir
 
 print(f"Building:\n\tGNU:{build_gnu}\n\tXSB:{build_xsb}\n\tSWIPL:{build_swi}")
 
