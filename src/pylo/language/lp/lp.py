@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import reduce
 from typing import List, Dict, Set, Tuple, Sequence
 
-import pygraphviz as pgv
+#import pygraphviz as pgv
 
 # from . import parse
 from ..commons import Predicate, Program, c_var, \
@@ -141,37 +141,37 @@ class ClausalTheory(Program):
 
         return ClausalTheory(new_set_of_formulas)
 
-    def visualize(self, filename: str, only_numbers=False):
-        predicates_in_bodies_only = set()  # names are the predicate names
-        predicates_in_heads = set() # names are clauses
-
-        for cl in self._formulas:
-            predicates_in_heads.add(cl.get_head().get_predicate())
-            predicates_in_bodies_only = predicates_in_bodies_only.union([x.get_predicate() for x in cl.get_literals()])
-
-        predicates_in_bodies_only = [x for x in predicates_in_bodies_only if x not in predicates_in_heads]
-
-        graph = pgv.AGraph(directed=True)
-        cl_to_node_name = {}
-
-        for p in predicates_in_bodies_only:
-            cl_to_node_name[p] = len(cl_to_node_name) if only_numbers else f"{p.get_name()}/{p.get_arity()}"
-            graph.add_node(cl_to_node_name[p], color='blue')
-
-        for cl in self._formulas:
-            if cl.get_head().get_predicate() not in cl_to_node_name:
-                ind = len(cl_to_node_name)
-                #cl_to_node_name[cl] = ind if only_numbers else str(cl)
-                cl_to_node_name[cl.get_head().get_predicate()] = ind if only_numbers else str(cl.get_head().get_predicate())
-                graph.add_node(cl_to_node_name[cl.get_head().get_predicate()], clause=cl.get_head().get_predicate(), color='black' if ('latent' in cl.get_head().get_predicate().get_name() or "_" in cl.get_head().get_predicate().get_name()) else 'red')
-
-        for cl in self._formulas:
-            body_p = [x.get_predicate() for x in cl.get_literals()]
-
-            for p in body_p:
-                graph.add_edge(cl_to_node_name[cl.get_head().get_predicate()], cl_to_node_name[p])
-
-        graph.draw(filename, prog='dot')
+    # def visualize(self, filename: str, only_numbers=False):
+    #     predicates_in_bodies_only = set()  # names are the predicate names
+    #     predicates_in_heads = set() # names are clauses
+    #
+    #     for cl in self._formulas:
+    #         predicates_in_heads.add(cl.get_head().get_predicate())
+    #         predicates_in_bodies_only = predicates_in_bodies_only.union([x.get_predicate() for x in cl.get_literals()])
+    #
+    #     predicates_in_bodies_only = [x for x in predicates_in_bodies_only if x not in predicates_in_heads]
+    #
+    #     graph = pgv.AGraph(directed=True)
+    #     cl_to_node_name = {}
+    #
+    #     for p in predicates_in_bodies_only:
+    #         cl_to_node_name[p] = len(cl_to_node_name) if only_numbers else f"{p.get_name()}/{p.get_arity()}"
+    #         graph.add_node(cl_to_node_name[p], color='blue')
+    #
+    #     for cl in self._formulas:
+    #         if cl.get_head().get_predicate() not in cl_to_node_name:
+    #             ind = len(cl_to_node_name)
+    #             #cl_to_node_name[cl] = ind if only_numbers else str(cl)
+    #             cl_to_node_name[cl.get_head().get_predicate()] = ind if only_numbers else str(cl.get_head().get_predicate())
+    #             graph.add_node(cl_to_node_name[cl.get_head().get_predicate()], clause=cl.get_head().get_predicate(), color='black' if ('latent' in cl.get_head().get_predicate().get_name() or "_" in cl.get_head().get_predicate().get_name()) else 'red')
+    #
+    #     for cl in self._formulas:
+    #         body_p = [x.get_predicate() for x in cl.get_literals()]
+    #
+    #         for p in body_p:
+    #             graph.add_edge(cl_to_node_name[cl.get_head().get_predicate()], cl_to_node_name[p])
+    #
+    #     graph.draw(filename, prog='dot')
 
     def __str__(self):
         return "\n".join([str(x) for x in self._formulas])

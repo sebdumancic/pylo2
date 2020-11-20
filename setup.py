@@ -188,8 +188,17 @@ setuptools.setup(name='pylo',
                  install_requires=[
                      'networkx',
                      'miniKanren',
-                     'pygraphviz',
                      'z3-solver'
                  ],
-                 python_requires=">=3.6"
+                 python_requires=">=3.6",
+                 classifiers=[
+                     'Development Status :: 3 - Alpha',
+                     'Intended Audience :: Developers',
+                     'Intended Audience :: Science/Research',
+                     'License :: OSI Approved :: MIT License',
+                     'Operating System :: OS Independent',
+                     'Programming Language :: Python',
+                     'Topic :: Scientific/Engineering :: Artificial Intelligence',
+                     'Topic :: Software Development :: Libraries :: Python Modules'
+                 ]
                  )
