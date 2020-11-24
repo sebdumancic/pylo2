@@ -1063,7 +1063,7 @@ class Context:
         self._variables = {}  # domain -> {name -> Variable}
         self._constants = {}  # domain -> {name -> Constant}
         self._literals = {}  # Predicate -> { tuple of terms -> Atom}
-        self._domains = {"thing": Type("thing")}  # name -> Type
+        self._domains = {"thing": Type("thing"), "number": Type("number")}  # name -> Type
         self._id_to_constant = {}  # domain (str) -> {id -> Constant}
         self._functors = {2: {}}  # arity -> name -> Functor
 
@@ -1106,7 +1106,7 @@ class Context:
         if len(domains) == 0:
             domains = [self._domains["thing"]] * arity
 
-        domains = [d if isinstance(d, Type) else self._domains[d] for d in domains]
+        domains = [d if isinstance(d, Type) else self.type(d) for d in domains]
 
         if not self._predicate_sig(name, arity) is self._predicates:
             p = Predicate(name, arity, domains)
