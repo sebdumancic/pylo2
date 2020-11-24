@@ -113,8 +113,15 @@ class XSBProlog(Prolog):
         pyxsb.pyxsb_init_string(exec_path)
         super().__init__()
 
+        self.is_released: bool = False
+
+    def release(self):
+        if not self.is_released:
+            pyxsb.pyxsb_close()
+            self.is_released: bool = True
+
     def __del__(self):
-        pyxsb.pyxsb_close()
+        self.release()
 
     def consult(self, filename: str):
         return pyxsb.pyxsb_command_string(f"consult('{filename}').")

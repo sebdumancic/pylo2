@@ -8,6 +8,10 @@ class Prolog(ABC):
         pass
 
     @abstractmethod
+    def release(self):
+        pass
+
+    @abstractmethod
     def consult(self, filename: str):
         pass
 
