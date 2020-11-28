@@ -27,7 +27,7 @@ except Exception:
 from pylo.engines.kanren import MiniKanren
 engines += ['MiniKanren']
 
-__all__ = engines
+# __all__ = engines
 # __all__ = [
 #     'GNUProlog',
 #     'XSBProlog',

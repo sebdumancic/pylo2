@@ -1,11 +1,17 @@
-from .GnuProlog import GNUProlog
-from .SWIProlog import SWIProlog
-from .XSBProlog import XSBProlog
+try:
+    from .GnuProlog import GNUProlog
+except Exception:
+    pass
+
+try:
+    from .SWIProlog import SWIProlog
+except Exception:
+    pass
+
+try:
+    from .XSBProlog import XSBProlog
+except Exception:
+    pass
+
 from .prologsolver import Prolog
 
-__all__ = [
-    "SWIProlog",
-    "XSBProlog",
-    "GNUProlog",
-    "Prolog"
-]
