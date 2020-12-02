@@ -2,9 +2,16 @@ from abc import ABC
 from dataclasses import dataclass
 from functools import reduce
 from typing import Dict, Tuple, Sequence, Set, Union
+from .string_check_utils import is_valid_constant, is_valid_variable
 
-import kanren
-import z3
+try:
+    import kanren
+except:
+    kanren = None
+try:
+    import z3
+except:
+    z3 = None
 
 # from loreleai.language import MUZ, KANREN_LOGPY
 
@@ -144,7 +151,7 @@ class Constant(Term):
     """
 
     def __init__(self, name, sym_type):
-        assert name[0].islower(), f"Constants should be name with lowercase {name}"
+        assert is_valid_constant(name), f"Constants should be name with lowercase {name}"
         super().__init__(name, sym_type)
         self._id = len(sym_type)
         self.type.add(self)
@@ -179,7 +186,7 @@ class Variable(Term):
     """
 
     def __init__(self, name: str, sym_type: Type = None):
-        assert name[0].isupper(), f"Variables should be name uppercase {name}"
+        assert is_valid_variable(name), f"Variables should be name uppercase {name}"
         if sym_type is None:
             sym_type = c_type("thing")
         if name[0].islower():
@@ -276,7 +283,7 @@ class Structure(Term):
     def __eq__(self, other):
         if isinstance(self, type(other)):
             return (
-                    self.name == other.type
+                    self.name == other.name
                     and len(self.arguments) == len(other.arguments)
                     and all([x == y for (x, y) in zip(self.arguments, other.arguments)])
             )
@@ -478,10 +485,13 @@ class Atom(Literal):
         self.arg_signature = []
 
     def substitute(self, term_map: Dict[Term, Term]):
-        return c_literal(
-            self.predicate,
-            [term_map[x] if x in term_map else x for x in self.arguments],
-        )
+        try:
+            return c_literal(
+                self.predicate,
+                [term_map[x] if x in term_map else x for x in self.arguments],
+            )
+        except Exception as e:
+            raise e
 
     def get_predicate(self) -> Predicate:
         return self.predicate
@@ -602,7 +612,12 @@ class Body:
         return vars_ordered
 
     def substitute(self, term_map: Dict[Term, Term]):
-        return Body([x.substitute(term_map) for x in self._literals])
+        substituted_lits = [x.substitute(term_map) for x in self._literals]
+        if len(substituted_lits) == 1:
+
+            return Body(substituted_lits[0])
+        else:
+            return Body(*substituted_lits)
 
     def substitute_predicate(self, old_predicate: Predicate, new_predicate: Predicate):
         return Body(
@@ -1199,10 +1214,7 @@ class Context:
             return found[0]
         else:
             # if doesn't exist
-            assert (
-                arity is not None or types is not None,
-                "creating new functor requires either arity or argument types",
-            )
+            assert arity is not None or types is not None, "creating new functor requires either arity or argument types"
             if types is None:
                 if arity not in self._functors:
                     self._functors[arity] = {}

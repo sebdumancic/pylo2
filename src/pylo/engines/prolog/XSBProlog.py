@@ -6,6 +6,7 @@ from pylo.language.lp import Constant, Variable, Functor, Structure, List, Predi
 from pylo.engines.prolog.prologsolver import Prolog
 #from pylo.language.lp import Variable, Structure, List, Atom, Clause, c_var, c_pred, c_functor, c_const, c_symbol
 import sys
+from pylo.language.string_check_utils import is_valid_constant, is_surrounded_by_single_quotes
 
 #sys.path.append("../../build")
 import os
@@ -17,9 +18,9 @@ from typing import Union
 from functools import reduce
 
 
+
 def _is_list(term: str):
     return term.startswith('[')
-
 
 def _is_structure(term: str):
     if is_surrounded_by_single_quotes(term):
