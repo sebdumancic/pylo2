@@ -32,10 +32,11 @@ PYBIND11_MODULE(swipy, m)
     m.attr("LIST") = PL_LIST;
 
     m.def("swipy_init", [](char *exec_path) {
-       char *av[1];
+       char *av[2];
        av[0] = (char *) exec_path;
+       av[1] = "-q";
 
-       return PL_initialise(1, av);
+       return PL_initialise(2, av);
     }, "initialises SWIPL engine");
     m.def("swipy_cleanup", &PL_cleanup, "cleans up the memroy");
     m.def("swipy_halt", &PL_halt, "halts SWIP");

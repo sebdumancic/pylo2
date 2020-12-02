@@ -1,9 +1,9 @@
-# from src.pylo import Prolog
-# from src.pylo import Constant, Variable, Functor, Structure, List, Atom, Negation, Clause, \
+# from src.pylo.engines.prolog import Prolog
+# from src.pylo.language.lp import Constant, Variable, Functor, Structure, List, Atom, Not, Clause, \
 #    c_const, c_pred, c_var, c_functor, c_symbol
 
-from .Prolog import Prolog
-from .language import Constant, Variable, Functor, Structure, List, Atom, Negation, Clause, \
+from pylo.engines.prolog.prologsolver import Prolog
+from pylo.language.lp import Constant, Variable, Functor, Structure, List, Atom, Not, Clause, \
     c_const, c_pred, c_var, c_functor, c_symbol
 
 import sys
@@ -84,10 +84,10 @@ def _lit_to_pygp(literal: Atom, var_store=None):
     return pygprolog.pygp_Mk_Compound(pred, literal.get_predicate().get_arity(), args)
 
 
-def _neg_to_pygp(negation: Negation, var_store=None):
+def _neg_to_pygp(negation: Not, var_store=None):
     if var_store is None:
         var_store = {}
-    inner = _lit_to_pygp(negation.get_literal(), var_store)
+    inner = _lit_to_pygp(negation.get_atom(), var_store)
 
     ng_f = pygprolog.pygp_Find_Atom("\\+")
     return pygprolog.pygp_Mk_Compound(ng_f, 1, [inner])
@@ -292,7 +292,7 @@ class GNUProlog(Prolog):
         if isinstance(clause, Clause):
             return self._retract_cl(clause)
 
-    def has_solution(self, *query: Union[Atom, Negation]):
+    def has_solution(self, *query: Union[Atom, Not]):
         var_store = {}
 
         if len(query) == 1:

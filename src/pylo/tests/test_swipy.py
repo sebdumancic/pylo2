@@ -1,8 +1,8 @@
 # from pylo.engines import SWIProlog
 # from pylo import c_pred, c_functor, c_var, List
 
-from ..engines import SWIProlog
-from .. import c_pred, c_functor, c_var, List
+from pylo.engines.prolog import SWIProlog
+from pylo.language.lp import c_pred, c_functor, c_var, List
 
 
 def swipl_test1():

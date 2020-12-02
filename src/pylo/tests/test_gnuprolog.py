@@ -1,5 +1,5 @@
-from ..engines import GNUProlog
-from .. import c_pred, c_functor, c_var, List
+from pylo.engines.prolog import GNUProlog
+from pylo.language.lp import c_pred, c_functor, c_var, List
 
 # from pylo.engines import GNUProlog
 # from pylo import c_pred, c_functor, c_var, List
