@@ -1,7 +1,7 @@
 # from pylo.engines import XSBProlog
 # from pylo import c_pred, c_functor, c_var, List
-from ..engines import XSBProlog
-from .. import c_pred, c_functor, c_var, List
+from pylo.engines.prolog import XSBProlog
+from pylo.language.lp import c_pred, c_functor, c_var, List
 
 
 # "/Users/seb/Documents/programs/XSB"

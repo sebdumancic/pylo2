@@ -1,11 +1,11 @@
-# from src.pylo import (
-#     Prolog
-# )
-# from src.pylo import Constant, Variable, Functor, Structure, List, Predicate, Atom, Negation, Clause, \
-#     c_pred, c_const, c_var, c_functor
-from .Prolog import Prolog
-from .language import Constant, Variable, Functor, Structure, Predicate, List, Atom, Negation, Clause, \
-    list_func, Literal, c_pred, c_const, c_var, c_functor
+from pylo.engines.prolog.prologsolver import (
+    Prolog
+)
+from pylo.language.lp import Constant, Variable, Functor, Structure, List, Predicate, Atom, Not, Clause, \
+    c_pred, c_const, c_var, c_functor
+# from .prologsolver import Prolog
+# from pylo.language.lp import Constant, Variable, Functor, Structure, Predicate, List, Atom, Not, Clause, \
+#     list_func, Literal, c_pred, c_const, c_var, c_functor
 import typing
 import sys
 
@@ -165,8 +165,8 @@ def _lit_to_swipy(clause: Atom, lit_var_store: Dict[Variable, int]):
         return literal
 
 
-def _neg_to_swipy(clause: Negation, lit_var_store: Dict[Variable, int]):
-    lit = _lit_to_swipy(clause.get_literal(), lit_var_store)
+def _neg_to_swipy(clause: Not, lit_var_store: Dict[Variable, int]):
+    lit = _lit_to_swipy(clause.get_atom(), lit_var_store)
     neg_atom = swipy.swipy_new_atom("\\+")
     neg_functor = swipy.swipy_new_functor(neg_atom, 1)
 
@@ -193,7 +193,7 @@ def _conjoin_literals(lits: Sequence[int]):
 
 
 def _cl_to_swipy(clause: Clause, lit_var_store: Dict[Variable, int]):
-    body: typing.List[Union[Atom, Negation]] = clause.get_body().get_literals()
+    body: typing.Sequence[Union[Atom, Not]] = clause.get_body().get_literals()
     head: Atom = clause.get_head()
 
     body: typing.List[int] = [_lit_to_swipy(x, lit_var_store)
@@ -395,7 +395,7 @@ class SWIProlog(Prolog):
 
         return r
 
-    def has_solution(self, *query: Union[Atom, Negation]):
+    def has_solution(self, *query: Union[Atom, Not]):
         var_store = {}
 
         if len(query) == 1:
@@ -709,6 +709,7 @@ if __name__ == '__main__':
         del solver
 
     #test1()
+    #test5()
 
 
 
