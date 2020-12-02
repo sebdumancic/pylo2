@@ -1,3 +1,6 @@
+# 0.3.2
+ - fixed functor issue
+
 # 0.3.1.
  - fixed correct name check in `Constant`
  - fixed correct name check in `Variable`

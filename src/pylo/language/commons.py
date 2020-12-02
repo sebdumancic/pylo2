@@ -276,7 +276,7 @@ class Structure(Term):
     def __eq__(self, other):
         if isinstance(self, type(other)):
             return (
-                    self.name == other.type
+                    self.name == other.name
                     and len(self.arguments) == len(other.arguments)
                     and all([x == y for (x, y) in zip(self.arguments, other.arguments)])
             )
