@@ -389,7 +389,7 @@ class SWIProlog(Prolog):
 
         retract = swipy.swipy_predicate("retract", 1, None)
         query = swipy.swipy_open_query(retract, lit)
-        r = swipy.swipy_next_solution(queryg)
+        r = swipy.swipy_next_solution(query)
         swipy.swipy_close_query(query)
 
         return r
