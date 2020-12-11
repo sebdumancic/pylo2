@@ -5,6 +5,10 @@ class Prolog(ABC):
 
     @abstractmethod
     def __init__(self):
+        self.is_released: bool = False
+
+    @abstractmethod
+    def release(self):
         pass
 
     @abstractmethod
