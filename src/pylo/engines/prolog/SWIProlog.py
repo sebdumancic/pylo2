@@ -305,13 +305,10 @@ class SWIProlog(Prolog):
         self._wrap_refs_to_keep = []
         super(SWIProlog, self).__init__()
 
-        self.is_released: bool = False
-
     def release(self):
         if not self.is_released:
             swipy.swipy_cleanup(1)
             self.is_released: bool = True
-
 
     def __del__(self):
         self.release()

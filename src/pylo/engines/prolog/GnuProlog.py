@@ -188,8 +188,6 @@ class GNUProlog(Prolog):
         pygprolog.pygp_Start_Prolog()
         super().__init__()
 
-        self.is_released: bool = False
-
     def release(self):
         if not self.is_released:
             pygprolog.pygp_Stop_Prolog()

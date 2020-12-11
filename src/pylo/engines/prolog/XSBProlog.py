@@ -114,8 +114,6 @@ class XSBProlog(Prolog):
         pyxsb.pyxsb_init_string(exec_path)
         super().__init__()
 
-        self.is_released: bool = False
-
     def release(self):
         if not self.is_released:
             pyxsb.pyxsb_close()
