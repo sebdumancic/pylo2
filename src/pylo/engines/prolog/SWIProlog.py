@@ -154,6 +154,7 @@ def _lit_to_swipy(clause: Atom, lit_var_store: Dict[Variable, int]):
         functor = _functor_to_swipy(clause.get_predicate())
         compound_arg = swipy.swipy_new_term_refs(clause.get_predicate().get_arity())
         args = clause.get_arguments()
+
         _to_swipy_ref(args[0], compound_arg, lit_var_store)
         for i in range(1, clause.get_predicate().get_arity()):
             _to_swipy_ref(args[i], compound_arg+i, lit_var_store)
@@ -305,8 +306,14 @@ class SWIProlog(Prolog):
         self._wrap_refs_to_keep = []
         super(SWIProlog, self).__init__()
 
+    def release(self):
+        if not self.is_released:
+            swipy.swipy_cleanup(1)
+            self.is_released: bool = True
+
     def __del__(self):
-        swipy.swipy_cleanup(1)
+        self.release()
+
 
     def consult(self, filename: str):
         string_term = swipy.swipy_new_term_ref()
