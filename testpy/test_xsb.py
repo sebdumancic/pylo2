@@ -1,6 +1,6 @@
 from pylo.engines import XSBProlog
 
-from pylo import global_context, List
+from pylo.language.lp import global_context, List
 
 pl = XSBProlog("/Users/seb/Documents/programs/XSB")
 

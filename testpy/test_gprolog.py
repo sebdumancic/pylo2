@@ -1,7 +1,7 @@
 
 from pylo.engines import GNUProlog
 
-from pylo import global_context, List
+from pylo.language.lp import global_context, List
 
 
 pl = GNUProlog()
