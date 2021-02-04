@@ -49,8 +49,10 @@ class MuZ(DatalogSolver):
         super().__init__(MUZ, knowledge_base, background_knowledge, ctx)
 
     def declare_type(self, elem_type: Type):
-        s = BitVecSort(ceil(log(len(elem_type), 2)))
-        elem_type.add_engine_object(s)
+        len_elem_type = len(elem_type)
+        if len_elem_type > 0:
+            s = BitVecSort(ceil(log(len(elem_type), 2)))
+            elem_type.add_engine_object(s)
 
     def declare_constant(self, elem_constant: Constant):
         s = elem_constant.get_type().get_engine_obj(self._name)

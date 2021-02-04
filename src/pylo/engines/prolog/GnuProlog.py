@@ -188,8 +188,13 @@ class GNUProlog(Prolog):
         pygprolog.pygp_Start_Prolog()
         super().__init__()
 
+    def release(self):
+        if not self.is_released:
+            pygprolog.pygp_Stop_Prolog()
+            self.is_released: bool = True
+
     def __del__(self):
-        pygprolog.pygp_Stop_Prolog()
+        self.release()
 
     def consult(self, filename):
         consult = pygprolog.pygp_Find_Atom("consult")

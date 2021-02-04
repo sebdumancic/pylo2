@@ -305,8 +305,14 @@ class SWIProlog(Prolog):
         self._wrap_refs_to_keep = []
         super(SWIProlog, self).__init__()
 
+    def release(self):
+        if not self.is_released:
+            swipy.swipy_cleanup(1)
+            self.is_released: bool = True
+
     def __del__(self):
-        swipy.swipy_cleanup(1)
+        self.release()
+
 
     def consult(self, filename: str):
         string_term = swipy.swipy_new_term_ref()
