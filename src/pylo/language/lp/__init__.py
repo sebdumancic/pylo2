@@ -31,7 +31,8 @@ from ..commons import (
     list_func,
     List,
     Context,
-    Body
+    Body,
+    Pair
 )
 
 
@@ -72,5 +73,6 @@ __all__ = [
     "list_func",
     "List",
     "Context",
-    "Body"
+    "Body",
+    "Pair"
 ]

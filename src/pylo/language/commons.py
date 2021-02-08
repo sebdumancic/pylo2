@@ -321,7 +321,7 @@ list_func = Functor(".", 2)
 
 
 class List(Structure):
-    def __init__(self, elements: Sequence[Union[Term, int, float]]):
+    def __init__(self, elements: Sequence[Union[Term, int, float, str]]):
         argsToUse = []
         for elem in elements:
             if isinstance(elem, str) and elem[0].isupper():
@@ -340,6 +340,43 @@ class List(Structure):
 
     def __repr__(self):
         return f"[{','.join([str(x) for x in self.arguments])}]"
+
+
+pair_functor = Functor("[|]", 2)
+
+
+class Pair(Structure):
+
+    def __init__(self, left: Union[Term, int, float, str], right: Union[Term, int, float, str]):
+        if isinstance(left, (Term, Constant, Variable, Structure, 'List', int, float)):
+            self._left = left
+        elif isinstance(left, str) and left[0].islower():
+            self._left = global_context.constant(left)
+        elif isinstance(left, str) and left[0].isupper():
+            self._left = global_context.variable(left)
+        else:
+            raise Exception(f" don't know how to convert {left}")
+
+        if isinstance(right, (Term, Constant, Variable, Structure, 'List', int, float)):
+            self._right = right
+        elif isinstance(right, str) and right[0].islower():
+            self._right = global_context.constant(right)
+        elif isinstance(right, str) and right[0].isupper():
+            self._right = global_context.variable(right)
+        else:
+            raise Exception(f" don't know how to convert {right}")
+
+        super(Pair, self).__init__(pair_functor, [self._left, self._right])
+
+    def __repr__(self):
+        return f"[{self._left} | {self._right}]"
+
+    def get_left(self):
+        return self._left
+
+    def get_right(self):
+        return self._right
+
 
 
 @dataclass

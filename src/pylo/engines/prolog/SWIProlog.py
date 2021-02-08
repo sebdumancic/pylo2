@@ -2,7 +2,7 @@ from pylo.engines.prolog.prologsolver import (
     Prolog
 )
 from pylo.language.lp import Constant, Variable, Functor, Structure, List, Predicate, Atom, Not, Clause, \
-    c_pred, c_const, c_var, c_functor
+    c_pred, c_const, c_var, c_functor, Pair
 # from .prologsolver import Prolog
 # from pylo.language.lp import Constant, Variable, Functor, Structure, Predicate, List, Atom, Not, Clause, \
 #     list_func, Literal, c_pred, c_const, c_var, c_functor
@@ -77,6 +77,8 @@ def _to_swipy(item, lit_var_store: Dict[Variable, int]):
         return _num_to_swipy(item)
     elif isinstance(item, List):
         return _list_to_swipy(item, lit_var_store)
+    elif isinstance(item, Pair):
+        return _pair_to_swipy(item, lit_var_store)
     elif isinstance(item, Structure):
         return _structure_to_swipy(item, lit_var_store)
     else:
@@ -92,6 +94,8 @@ def _to_swipy_ref(item, swipy_ref, lit_var_store: Dict[Variable, int]):
         return _num_to_swipy_ref(item, swipy_ref)
     elif isinstance(item, List):
         return _list_to_swipy_ref(item, swipy_ref, lit_var_store)
+    elif isinstance(item, Pair):
+        return _pair_to_swipy_ref(item, swipy_ref, lit_var_store)
     elif isinstance(item, Structure):
         return _structure_to_swipy_ref(item, swipy_ref, lit_var_store)
     else:
@@ -144,6 +148,29 @@ def _list_to_swipy_ref(item: List, swipy_ref, lit_var_store: Dict[Variable, int]
     for ind in range(len(args) - 1, -1, -1):
         _to_swipy_ref(args[ind], clist_term, lit_var_store)
         swipy.swipy_cons_list(swipy_ref, clist_term, swipy_ref)
+
+
+def _pair_to_swipy(item: Pair, lit_var_store: Dict[Variable, int]):
+    list_term = swipy.swipy_new_term_ref()
+    head = swipy.swipy_new_term_ref()
+    tail = swipy.swipy_new_term_ref()
+
+    _to_swipy_ref(item.get_left(), head, lit_var_store)
+    _to_swipy_ref(item.get_right(), tail, lit_var_store)
+
+    swipy.swipy_cons_list(list_term, head, tail)
+
+    return list_term
+
+
+def _pair_to_swipy_ref(item: Pair, swipy_ref, lit_var_store: Dict[Variable, int]):
+    head = swipy.swipy_new_term_ref()
+    tail = swipy.swipy_new_term_ref()
+
+    _to_swipy_ref(item.get_left(), head, lit_var_store)
+    _to_swipy_ref(item.get_right(), tail, lit_var_store)
+
+    swipy.swipy_cons_list(swipy_ref, head, tail)
 
 
 def _lit_to_swipy(clause: Atom, lit_var_store: Dict[Variable, int]):
@@ -258,6 +285,16 @@ def _swipy_to_list(term):
     return List(elements)
 
 
+def _swipy_to_pair(term):
+    head = swipy.swipy_new_term_ref()
+    tail = swipy.swipy_new_term_ref()
+
+    swipy.swipy_get_head(term, head)
+    swipy.swipy_get_tail(term, tail)
+
+    return Pair(_read_swipy(head), _read_swipy(tail))
+
+
 def _swipy_to_structure(term):
     name, arity = swipy.swipy_get_name_arity(term)
     name = swipy.swipy_atom_chars(name)
@@ -285,7 +322,7 @@ def _read_swipy(term, swipy_term_to_var={}):
     elif swipy.swipy_is_list(term):
         return _swipy_to_list(term)
     elif swipy.swipy_is_pair(term):
-        raise Exception("reading pairs not supported yet")
+        return _swipy_to_pair(term)
     elif swipy.swipy_is_compound(term):
         return _swipy_to_structure(term)
     elif swipy.swipy_is_variable(term):
@@ -715,9 +752,6 @@ if __name__ == '__main__':
 
     #test1()
     #test5()
-
-
-
 
 
 
