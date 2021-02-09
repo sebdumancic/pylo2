@@ -2,6 +2,7 @@
  - added support for pairs in SWIPL
  - constants can be enclosed in \" or \'
  - string constants propagated everywhere
+ - added safety checks when reading strings from SWIPL
 
 # 0.3.2
  - fixed functor issue

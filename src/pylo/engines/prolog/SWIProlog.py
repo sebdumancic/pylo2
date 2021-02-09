@@ -244,7 +244,7 @@ def _cl_to_swipy(clause: Clause, lit_var_store: Dict[Variable, int]):
 
 def _swipy_to_const(term):
     name = swipy.swipy_get_atom_chars(term)
-    return c_const(name)
+    return c_const(name if name[0].islower() else f"\"{name}\"")
 
 
 def _swipy_to_int(term):
@@ -256,7 +256,7 @@ def _swipy_to_float(term):
 
 
 def _swipy_to_string(term):
-    return swipy.swipy_get_string_chars(term)
+    return c_const(swipy.swipy_get_string_chars(term))
 
 
 def _swipy_to_var(term, swipy_term_to_var: Dict[int, Variable]):
