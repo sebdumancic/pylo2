@@ -237,23 +237,23 @@ class Functor:
         return self._name
 
     def __call__(
-            self, *args: Union[str, "Constant", "Variable", "Structure", "List", int, float]
+            self, *args: Union[str, "Constant", "Variable", "Structure", "List", "Pair", int, float]
     ) -> "Structure":
         args_to_use = []
         global global_context
-        elem: Union[str, "Constant", "Variable", "Structure", "List", int, float]
+        elem: Union[str, "Constant", "Variable", "Structure", "List", "Pair", int, float]
         for ind, elem in enumerate(args):
-            if isinstance(elem, str) and elem.islower():
+            if isinstance(elem, str) and (elem[0].islower() or elem[0] in {"'", '"'}):
                 if self._arg_types is None:
                     args_to_use.append(c_const(elem))
                 else:
                     args_to_use.append(c_const(elem, self._arg_types[ind]))
-            elif isinstance(elem, str) and elem.isupper():
+            elif isinstance(elem, str) and elem[0].isupper():
                 if self._arg_types is None:
                     args_to_use.append(c_var(elem))
                 else:
                     args_to_use.append(c_var(elem, self._arg_types[ind]))
-            elif isinstance(elem, (Constant, Variable, Structure, List, int, float)):
+            elif isinstance(elem, (Constant, Variable, Structure, List, Pair, int, float)):
                 args_to_use.append(elem)
             else:
                 raise Exception(
@@ -324,9 +324,9 @@ class List(Structure):
     def __init__(self, elements: Sequence[Union[Term, int, float, str]]):
         argsToUse = []
         for elem in elements:
-            if isinstance(elem, str) and elem[0].isupper():
+            if isinstance(elem, str) and elem[0].isupper() and elem[0] not in {'"', "'"}:
                 argsToUse.append(global_context.variable(elem))
-            elif isinstance(elem, str) and elem[0].islower():
+            elif isinstance(elem, str) and (elem[0].islower() or elem[0] in {'"', "'"}):
                 argsToUse.append(global_context.constant(elem))
             elif isinstance(elem, (Constant, Variable, Structure, Predicate, List)):
                 argsToUse.append(elem)
@@ -350,7 +350,7 @@ class Pair(Structure):
     def __init__(self, left: Union[Term, int, float, str], right: Union[Term, int, float, str]):
         if isinstance(left, (Term, Constant, Variable, Structure, 'List', int, float)):
             self._left = left
-        elif isinstance(left, str) and left[0].islower():
+        elif isinstance(left, str) and (left[0].islower() or left[0] in {"'", '"'}):
             self._left = global_context.constant(left)
         elif isinstance(left, str) and left[0].isupper():
             self._left = global_context.variable(left)
@@ -359,7 +359,7 @@ class Pair(Structure):
 
         if isinstance(right, (Term, Constant, Variable, Structure, 'List', int, float)):
             self._right = right
-        elif isinstance(right, str) and right[0].islower():
+        elif isinstance(right, str) and (right[0].islower() or right[0] in {"'", '"'}):
             self._right = global_context.constant(right)
         elif isinstance(right, str) and right[0].isupper():
             self._right = global_context.variable(right)
@@ -458,21 +458,21 @@ class Predicate:
     ) -> Union[Constant, Variable, Structure]:
         if "(" in name:
             raise Exception("automatically converting to structure not yet supported")
-        elif name.islower():
+        elif name[0].islower() or name[0] in {'"', "'"}:
             return c_const(name, self.argument_types[arg_position])
-        elif name.isupper():
+        elif name[0].isupper():
             return c_var(name, self.argument_types[arg_position])
         else:
             raise Exception(f"don't know how to parse {name} to object")
 
     def __call__(self, *args, **kwargs):
         assert len(args) == self.get_arity()
-        assert all([isinstance(x, (Constant, Variable, Structure, str, int, float)) for x in args])
+        assert all([isinstance(x, (Constant, Variable, Structure, List, Pair, str, int, float)) for x in args])
         global global_context
 
         args = [
             x
-            if isinstance(x, (Constant, Variable, Structure, int, float))
+            if isinstance(x, (Constant, Variable, Structure, List, Pair, int, float))
             else self._map_to_object(x, ind)
             for ind, x in enumerate(args)
         ]
