@@ -264,10 +264,11 @@ def _swipy_to_var(term, swipy_term_to_var: Dict[int, Variable]):
         return swipy_term_to_var[term]
     else:
         all_var_names = set([x.get_name() for x in swipy_term_to_var.values()])
-        new_name = [chr(x) for x in range(ord('A'), ord('Z') + 1) if chr(x) not in all_var_names][0]
+        new_name = [chr(x) for x in range(ord('A'), ord('Z') + 1) if chr(x) not in all_var_names]
         if len(new_name) == 0:
             new_name = [f"{chr(x)}{chr(y)}" for x in range(ord('A'), ord('Z') + 1) for y in
                         range(ord('A'), ord('Z') + 1) if f"{chr(x)}{chr(y)}" not in all_var_names]
+        new_name = new_name[0]
         new_var = Variable(new_name)
         swipy_term_to_var[term] = new_var
         return new_var
