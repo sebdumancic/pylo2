@@ -121,6 +121,7 @@ The basic constructs include terms:
  - variables: `X, Y`
  - structures: `sabre(green,long), date(2020,january,1)`
  - lists (a special kind of structure): `List([1,2,3,4,5])`
+ - pairs (a list made of head and tail): `Pair(X,Y)`
  
 To construct clauses, one needs:
  - predicates: `parent, ...`
@@ -200,7 +201,7 @@ Pylo also provides many convenient shortcuts for less tedious construction of kn
 The above example could have been constructed in the following way
 
 ```python
-from pylo.language.lp import c_pred, c_const, c_var, c_functor, List
+from pylo.language.lp import c_pred, c_const, c_var, c_functor, List, Pair
 
 # construct predicates
 father = c_pred("father", 2)
@@ -227,6 +228,9 @@ f5 = belongs_to(struct, "luke")
 
 # create list
 l = List(["padme", "leia", 1, 2, 3])  # if constants are numbers, just use python data structures
+
+# create pair
+p = Pair("X", "Y")
 
 
 # creating clauses
@@ -359,4 +363,7 @@ print("all asthma: ", tv)
 # Missing features
 
  - [ ] providing python functions as predicates
- - [ ] support for pairs (`[|]/2` or `./2`)
+ - [ ] full support for pairs (`[|]/2` or `./2`)
+    - [x] SWIPL (supports pairs)
+    - [ ] XSB
+    - [ ] GNU Prolog
