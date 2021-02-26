@@ -28,7 +28,11 @@ class Prolog(ABC):
         pass
 
     @abstractmethod
-    def retract(selfself, clause):
+    def retract(self, clause):
+        pass
+
+    @abstractmethod
+    def retract_all(self):
         pass
 
     @abstractmethod
