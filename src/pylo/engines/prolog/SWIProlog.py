@@ -454,7 +454,6 @@ class SWIProlog(Prolog):
     def retract_all(self):
         for cl in [cl for cl in self._asserted_clauses]:
             self.retract(cl)
-        self._asserted_clauses = set()
 
     def has_solution(self, *query: Union[Atom, Not]):
         var_store = {}

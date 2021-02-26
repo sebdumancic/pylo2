@@ -304,12 +304,10 @@ class GNUProlog(Prolog):
             return self._retract_cl(clause)
 
     def retract_all(self):
-        for cl in self._asserted_clauses:
+        for cl in [cl for cl in self._asserted_clauses]:
             self.retract(cl)
-        for atom in self._asserted_atoms:
+        for atom in  [cl for cl in self._asserted_atoms]:
             self.retract(atom)
-        self._asserted_clauses = set()
-        self._asserted_atoms = set()
 
     def has_solution(self, *query: Union[Atom, Not]):
         var_store = {}

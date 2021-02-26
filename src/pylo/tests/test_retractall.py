@@ -34,8 +34,8 @@ def test(pl):
 swipl = SWIProlog()
 test(swipl)
 
-xsb = XSBProlog()
+xsb = XSBProlog("/home/quinten/Software/XSB/")
 test(xsb)
 
-# gnu = GNUProlog()
-# test(gnu)
+gnu = GNUProlog()
+test(gnu)

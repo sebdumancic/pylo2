@@ -96,6 +96,9 @@ def _pyxsb_string_to_pylo(term: str):
 class XSBProlog(Prolog):
 
     def __init__(self, exec_path=None):
+        # Initializes is_released in case exec_path is not found (which calls release())
+        super().__init__()
+
         if exec_path is None:
             exec_path = os.getenv('XSB_HOME', None)
             raise Exception(f"Cannot find XSB_HOME environment variable")
@@ -103,7 +106,6 @@ class XSBProlog(Prolog):
         self._asserted_clauses = set()
         self._asserted_atoms = set()
 
-        super().__init__()
 
     def release(self):
         if not self.is_released:
@@ -155,12 +157,10 @@ class XSBProlog(Prolog):
                 return pyxsb.pyxsb_command_string(f"retract(({clause})).")
 
     def retract_all(self):
-        for cl in self._asserted_clauses:
+        for cl in [cl for cl in self._asserted_clauses]:
             self.retract(cl)
-        for cl in self._asserted_atoms:
+        for cl in [cl for cl in self._asserted_atoms]:
             self.retract(cl)
-        self._asserted_clauses = set()
-        self._asserted_atoms = set()
 
     def has_solution(self, *query: Atom):
         #assert not all([x.is_ground() for x in query]), "XSB Prolog currently cannot query ground queries"
