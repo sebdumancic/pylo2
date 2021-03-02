@@ -1,19 +1,23 @@
 from typing import Union, Sequence
 
 import kanren
+from orderedset import OrderedSet
 
 from pylo.language import KANREN_LOGPY
 from pylo.language.kanren import Constant, Type, Variable, Predicate, Atom, Clause, c_const, \
     construct_recursive_rule
 from ..lpsolver import LPSolver
+from ...language.commons import Term
 
 
 class MiniKanren(LPSolver):
 
     def __init__(self, knowledge_base=None, background_knowledge=None):
+        self.variable_mapping = dict() # A mapping from a name to the pylo representation of predicate, functor, constant, ...
         super().__init__(KANREN_LOGPY, knowledge_base, background_knowledge)
 
     def declare_constant(self, elem_constant: Constant) -> None:
+        self.add_variable_mapping(elem_constant)
         elem_constant.add_engine_object(elem_constant.name)
 
     def declare_type(self, elem_type: Type) -> None:
@@ -29,15 +33,20 @@ class MiniKanren(LPSolver):
         #     predicates used as facts need to be declared as
         pass
 
-    def assert_fact(self, fact: Atom) -> None:
-        try:
-            fact.get_predicate().get_engine_obj(KANREN_LOGPY)
-        except Exception:
-            fact.get_predicate().add_engine_object((KANREN_LOGPY, kanren.Relation()))
+    def add_variable_mapping(self, x: Union[Predicate, Term]):
+        if isinstance(x, (Predicate, Term)):
+            if x.get_name() not in self.variable_mapping:
+                self.variable_mapping[x.get_name()] = x
 
-        kanren.fact(fact.get_predicate().get_engine_obj(KANREN_LOGPY),
-                    *[x.as_kanren() for x in fact.get_terms()]
-                    )
+    def assert_fact(self, fact: Atom) -> None:
+        self.add_variable_mapping(fact.get_predicate())
+        for term in fact.get_terms():
+            self.add_variable_mapping(term)
+
+        kanren.fact(
+            fact.get_predicate().as_kanren(),
+            *[x.as_kanren() if getattr(x, "as_kanren", None) else x for x in fact.get_terms()]
+        )
 
     def assert_rule(self, rule: Union[Clause, Sequence[Clause]]) -> None:
         # only needs to add a miniKanren object to the predicate in the head
@@ -64,25 +73,21 @@ class MiniKanren(LPSolver):
 
     def _query(self, num_solutions, *atoms: Atom):
         # find variables
-        vars = {}
+        vars = OrderedSet()
         for atom in atoms:
-            for v in atom.get_variables():
-                if v not in vars:
-                    vars[v] = len(vars)
-
-        ori_vars = sorted(list(vars.keys()), key=lambda x: vars[x])
-        vars = [x.as_kanren() for x in ori_vars]
+            for var in atom.get_variables():
+                if var not in vars:
+                    vars.add(var)
 
         if len(vars) == 0:
-            terms = {}
             for atom in atoms:
-                for t in atom.get_terms():
-                    if t not in terms:
-                        terms[t] = len(terms)
-            ori_vars = sorted(list(terms.keys()), key=lambda x: terms[x])
-            ori_vars = [x.as_kanren() for x in ori_vars]
+                for term in atom.get_terms():
+                    if term not in vars:
+                        vars.add(term)
 
-        goals = [x.as_kanren() for x in atoms]
+        ori_vars = list(vars)
+        vars = [x.as_kanren() if getattr(x, "as_kanren", None) else x for x in ori_vars]
+        goals = [x.as_kanren() if getattr(x, "as_kanren", None) else x for x in atoms]
 
         return kanren.run(num_solutions, vars, *goals), ori_vars
 
@@ -97,13 +102,24 @@ class MiniKanren(LPSolver):
         else:
             max_solutions = 0
 
-        res, vars = self._query(max_solutions, *query)
+        results, vars = self._query(max_solutions, *query)
 
-        if len(res) == 0:
+        if len(results) == 0:
             return []
 
+        def get_variable_mapping(x):
+            if isinstance(x, str):
+                return self.variable_mapping[x]
+            elif isinstance(x, (kanren.Relation, kanren.Var)):
+                return self.variable_mapping[x.name]
+            else:
+                return x
+
         return [
-            dict(zip(vars, [c_const(y, vars[ind].get_type()) for ind, y in enumerate(x)])) for x in res
+            dict(zip(
+                    vars,
+                    [get_variable_mapping(x) for x in result]
+            )) for result in results
         ]
 
 
