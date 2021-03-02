@@ -163,6 +163,12 @@ class Constant(Term):
         else:
             raise Exception(f"unsupported Constant object {type(elem)}")
 
+    def as_kanren(self):
+        if KANREN_LOGPY not in self._engine_objects:
+            self.add_engine_object(self.name)
+
+        return self._engine_objects[KANREN_LOGPY]
+
     def __repr__(self):
         return self.name
 
@@ -196,6 +202,12 @@ class Variable(Term):
             self._engine_objects[KANREN_LOGPY] = elem
         else:
             raise Exception(f"unsupported Variable object: {type(elem)}")
+
+    def as_kanren(self):
+        if KANREN_LOGPY not in self._engine_objects:
+            self.add_engine_object(kanren.Var(self.name)) # TODO check
+
+        return self._engine_objects[KANREN_LOGPY]
 
     def __repr__(self):
         return self.name
@@ -292,6 +304,18 @@ class Structure(Term):
     def get_arguments(self) -> Sequence[Term]:
         return [x for x in self.arguments]
 
+    def get_variables(self) -> Sequence[Variable]:
+        vars = []
+        for arg in self.get_arguments():
+            if isinstance(arg, (int, float, Constant)):
+                continue
+            elif isinstance(arg, Variable):
+                vars.append(arg)
+            else:
+                vars.extend(arg.get_variables())
+
+        return vars
+
     def add_engine_object(self, elem):
         if isinstance(elem, tuple):
             # add object as (engine name, object)
@@ -303,6 +327,20 @@ class Structure(Term):
             self._engine_objects[KANREN_LOGPY] = elem
         else:
             raise Exception(f"unsupported Predicate object {type(elem)}")
+
+    def as_kanren(self):
+        if KANREN_LOGPY not in self._engine_objects:
+            relation = kanren.Relation(self.name)
+            self.add_engine_object(relation)
+
+            for x in self.arguments:
+                try:
+                    obj = x.as_kanren() # implicit engine object creating
+                    relation.add_fact(obj)
+                except Exception:
+                    relation.add_fact(x)
+
+        return self._engine_objects[KANREN_LOGPY]
 
     def get_engine_obj(self, eng):
         assert eng in [MUZ, KANREN_LOGPY]
@@ -338,9 +376,14 @@ class List(Structure):
                 )
         super(List, self).__init__(list_func, argsToUse)
 
+    def as_kanren(self):
+        return tuple([x.as_kanren() if isinstance(x, Term) else x for x in self.get_arguments()])
+
     def __repr__(self):
         return f"[{','.join([str(x) for x in self.arguments])}]"
 
+    def __hash__(self):
+        return hash(tuple(self.get_arguments()))
 
 pair_functor = Functor("[|]", 2)
 
@@ -376,7 +419,6 @@ class Pair(Structure):
 
     def get_right(self):
         return self._right
-
 
 
 @dataclass
@@ -421,11 +463,14 @@ class Predicate:
         assert eng in [MUZ, KANREN_LOGPY]
         return self._engine_objects[eng]
 
+    def as_kanren(self):
+        if KANREN_LOGPY not in self._engine_objects:
+            self.add_engine_object(kanren.Relation(self.name))
+
+        return self._engine_objects[KANREN_LOGPY]
+
     def as_muz(self):
         return self._engine_objects[MUZ]
-
-    def as_kanren(self):
-        return self._engine_objects[KANREN_LOGPY]
 
     def __eq__(self, other):
         if isinstance(self, type(other)):
@@ -454,16 +499,16 @@ class Predicate:
         return self.hash_cache
 
     def _map_to_object(
-            self, name: str, arg_position: int
+            self, arg: Union[str], arg_position: int
     ) -> Union[Constant, Variable, Structure]:
-        if "(" in name:
+        if "(" in arg:
             raise Exception("automatically converting to structure not yet supported")
-        elif name[0].islower() or name[0] in {'"', "'"}:
-            return c_const(name, self.argument_types[arg_position])
-        elif name[0].isupper():
-            return c_var(name, self.argument_types[arg_position])
+        elif arg[0].islower() or arg[0] in {'"', "'"}:
+            return c_const(arg, self.argument_types[arg_position])
+        elif arg[0].isupper():
+            return c_var(arg, self.argument_types[arg_position])
         else:
-            raise Exception(f"don't know how to parse {name} to object")
+            raise Exception(f"don't know how to parse {arg} to object")
 
     def __call__(self, *args, **kwargs):
         assert len(args) == self.get_arity()
@@ -527,7 +572,16 @@ class Atom(Literal):
         return {self.get_predicate()}
 
     def get_variables(self) -> Sequence[Variable]:
-        return [x for x in self.arguments if isinstance(x, Variable)]
+        vars = []
+        for arg in self.get_arguments():
+            if isinstance(arg, (int, float, Constant)):
+                continue
+            elif isinstance(arg, Variable):
+                vars.append(arg)
+            else:
+                vars.extend(arg.get_variables())
+
+        return vars
 
     def get_terms(self) -> Sequence[Term]:
         return [x for x in self.arguments]
@@ -541,7 +595,7 @@ class Atom(Literal):
 
     def as_kanren(self, base_case_recursion=None):
         # not used here, provides base cases for the recursion
-        args = [x.as_kanren() for x in self.arguments]
+        args = [x.as_kanren() if getattr(x, "as_kanren", None) else x for x in self.arguments]
         return self.predicate.as_kanren()(*args)
 
     def __repr__(self):
@@ -637,6 +691,21 @@ class Body:
             vars_covered = vars_covered.union(to_add)
 
         return vars_ordered
+
+    def get_arguments(self) -> Sequence[Variable]:
+        """
+        Returns the arguments of the literals in the body
+        """
+        args_ordered = []
+        args_covered = set()
+        for i in range(len(self._literals)):
+            to_add = [
+                x for x in self._literals[i].get_arguments() if x not in args_covered
+            ]
+            args_ordered += to_add
+            args_covered = args_covered.union(to_add)
+
+        return args_ordered
 
     def substitute(self, term_map: Dict[Term, Term]):
         return Body(*[x.substitute(term_map) for x in self._literals])
@@ -806,6 +875,12 @@ class Clause:
             vars_covered = vars_covered.union(to_add)
 
         return vars_ordered
+
+    def get_head_arguments(self) -> Sequence[Term]:
+        """
+        Returns only the head arguments
+        """
+        return self._head.get_arguments()
 
     def get_literals(self, with_predicates: Set[Predicate] = None) -> Sequence[Literal]:
         """
