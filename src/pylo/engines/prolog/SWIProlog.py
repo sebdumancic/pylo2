@@ -129,25 +129,36 @@ def _structure_to_swipy_ref(item: Structure, swipy_ref, lit_var_store: Dict[Vari
 
 def _list_to_swipy(item: List, lit_var_store: Dict[Variable, int]):
     list_term = swipy.swipy_new_term_ref()
-    clist_term = swipy.swipy_new_term_ref()
 
-    swipy.swipy_put_nil(list_term)
-    args = item.get_arguments()
-    for ind in range(len(args) - 1, -1, -1):
-        _to_swipy_ref(args[ind], clist_term, lit_var_store)
-        swipy.swipy_cons_list(list_term, clist_term, list_term)
+    if len(item.get_arguments()) == 0:
+        # if empty list
+        swipy.swipy_put_nil(list_term)
+    else:
+        # if non-empty list
+        clist_term = swipy.swipy_new_term_ref()
+
+        swipy.swipy_put_nil(list_term)
+        args = item.get_arguments()
+        for ind in range(len(args) - 1, -1, -1):
+            _to_swipy_ref(args[ind], clist_term, lit_var_store)
+            swipy.swipy_cons_list(list_term, clist_term, list_term)
 
     return list_term
 
 
 def _list_to_swipy_ref(item: List, swipy_ref, lit_var_store: Dict[Variable, int]):
-    clist_term = swipy.swipy_new_term_ref()
+    if len(item.get_arguments()) == 0:
+        # if empty
+        swipy.swipy_put_nil(swipy_ref)
+    else:
+        # if not empty
+        clist_term = swipy.swipy_new_term_ref()
 
-    swipy.swipy_put_nil(swipy_ref)
-    args = item.get_arguments()
-    for ind in range(len(args) - 1, -1, -1):
-        _to_swipy_ref(args[ind], clist_term, lit_var_store)
-        swipy.swipy_cons_list(swipy_ref, clist_term, swipy_ref)
+        swipy.swipy_put_nil(swipy_ref)
+        args = item.get_arguments()
+        for ind in range(len(args) - 1, -1, -1):
+            _to_swipy_ref(args[ind], clist_term, lit_var_store)
+            swipy.swipy_cons_list(swipy_ref, clist_term, swipy_ref)
 
 
 def _pair_to_swipy(item: Pair, lit_var_store: Dict[Variable, int]):
@@ -750,6 +761,30 @@ if __name__ == '__main__':
 
         print(solver.query(edge(X, Y), edge(Y, Z), edge(Z,"W")))
         del solver
+
+    def test6():
+        solver = SWIProlog()
+
+        head = c_pred("head", 2)
+        tail = c_pred("tail", 2)
+        take_second = c_pred("take_second", 2)
+        H = c_var("Head")
+        T = c_var("Tail")
+        X = c_var("X")
+        Y = c_var("Y")
+
+        hatm1 = head(Pair(H, T), H)
+        tatm1 = tail(Pair(H, T), T)
+        cl = (take_second(X,Y) <= tail(X, T) & head(T, Y))
+
+        solver.assertz(hatm1)
+        solver.assertz(tatm1)
+        solver.assertz(cl)
+
+        l = List([1,2,3,4,5])
+        solver.query(take_second(l, X))
+
+
 
     #test1()
     #test5()
