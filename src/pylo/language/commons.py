@@ -283,6 +283,9 @@ class Structure(Term):
         else:
             return False
 
+    def __hash__(self):
+        return hash(self.__repr__())
+
     def arity(self):
         return len(self.arguments)
 
@@ -341,6 +344,15 @@ class List(Structure):
     def __repr__(self):
         return f"[{','.join([str(x) for x in self.arguments])}]"
 
+    def __hash__(self):
+        return hash(self.__repr__())
+
+    def __eq__(self, other):
+        if isinstance(other, List):
+            return self.arguments == other.arguments
+        else:
+            return False
+
 
 pair_functor = Functor("[|]", 2)
 
@@ -370,6 +382,15 @@ class Pair(Structure):
 
     def __repr__(self):
         return f"[{self._left} | {self._right}]"
+
+    def __hash__(self):
+        return hash(self.__repr__())
+
+    def __eq__(self, other):
+        if isinstance(other, Pair):
+            return self._left == other._left and self._right == other._right
+        else:
+            return False
 
     def get_left(self):
         return self._left
