@@ -5,6 +5,7 @@
  - added safety checks when reading strings from SWIPL
  - fixed issue with automatically naming vars in SWIPL
  - fixed hashing for lists and pairs
+ - hashing for procedures
 
 # 0.3.2
  - fixed functor issue
