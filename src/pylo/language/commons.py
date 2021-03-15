@@ -1082,7 +1082,7 @@ class Disjunction(Procedure):
         super().__init__(clauses)
 
     def __hash__(self):
-        return hash([hash(x) for x in self.get_clauses()])
+        return hash(";".join([str(x) for x in self.get_clauses()]))
 
 
 class Recursion(Procedure):
@@ -1096,7 +1096,7 @@ class Recursion(Procedure):
         return [x for x in self._clauses if x.is_recursive()]
 
     def __hash__(self):
-        return hash([hash(x) for x in self.get_clauses()])
+        return hash(";".join([str(x) for x in self.get_clauses()]))
 
 
 class Program:
