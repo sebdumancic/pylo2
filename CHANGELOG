@@ -1,5 +1,5 @@
 # 0.3.3
- - added support for pairs in SWIPL
+ - added support for pairs in SWIPL, Gnu, and XSB
  - constants can be enclosed in \" or \'
  - string constants propagated everywhere
  - added safety checks when reading strings from SWIPL

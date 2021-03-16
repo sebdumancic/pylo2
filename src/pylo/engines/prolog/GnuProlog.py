@@ -4,7 +4,7 @@
 
 from pylo.engines.prolog.prologsolver import Prolog
 from pylo.language.lp import Constant, Variable, Functor, Structure, List, Atom, Not, Clause, \
-    c_const, c_pred, c_var, c_functor, c_symbol
+    c_const, c_pred, c_var, c_functor, c_symbol, Pair
 
 import sys
 sys.path.append("../../../build")
@@ -54,6 +54,8 @@ def _to_pygp(item, lit_var_store: Dict[Variable, int]):
         return _num_to_pygp(item)
     elif isinstance(item, List):
         return _list_to_pygp(item, lit_var_store)
+    elif isinstance(item, Pair):
+        return _pair_to_pygp(item, lit_var_store)
     elif isinstance(item, Structure):
         return _structure_to_pygp(item, lit_var_store)
     else:
@@ -64,6 +66,18 @@ def _list_to_pygp(ll: List, lit_var_store: Dict[Variable, int]):
     args = [_to_pygp(x, lit_var_store) for x in ll.get_arguments()]
 
     return pygprolog.pygp_Mk_List(args)
+
+
+def _pair_to_pygp(p: Pair, lit_var_store: Dict[Variable, int]):
+    left = _to_pygp(p.get_left(), lit_var_store)
+    right = _to_pygp(p.get_right(), lit_var_store)
+
+    functor = pygprolog.pygp_Find_Atom('.')
+    if functor < 0:
+        functor = pygprolog.pygp_Create_Allocate_Atom('.')
+
+    args = [left, right]
+    return pygprolog.pygp_Mk_Compound(functor, 2, args)
 
 
 def _structure_to_pygp(struct: Structure, lit_var_store: Dict[Variable, int]):
@@ -469,8 +483,34 @@ if __name__ == '__main__':
         print(solver.query(edge(X, Y), edge(Y, Z), edge(Z,"W")))
         del solver
 
+    def test6():
+        solver = GNUProlog()
+
+        head = c_pred("head", 2)
+        tail = c_pred("tail", 2)
+        take_second = c_pred("take_second", 2)
+        H = c_var("Head")
+        T = c_var("Tail")
+        X = c_var("X")
+        Y = c_var("Y")
+
+        hatm1 = head(Pair(H, T), H)
+        tatm1 = tail(Pair(H, T), T)
+        cl = (take_second(X,Y) <= tail(X, T) & head(T, Y))
+
+        solver.assertz(hatm1)
+        solver.assertz(tatm1)
+        solver.assertz(cl)
+
+        l = List([1, 2, 3, 4, 5])
+        print(solver.query(take_second(l, X)))
+
+        del solver
+
     #test1()
     #test5()
+
+    #test6()
 
 
 

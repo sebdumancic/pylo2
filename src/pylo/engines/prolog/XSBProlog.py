@@ -2,7 +2,7 @@
 #     Prolog
 # )
 from pylo.language.lp import Constant, Variable, Functor, Structure, List, Predicate, Atom, Not, Clause, \
-    c_var, c_pred, c_functor, c_const, c_symbol
+    c_var, c_pred, c_functor, c_const, c_symbol, Pair
 from pylo.engines.prolog.prologsolver import Prolog
 #from pylo.language.lp import Variable, Structure, List, Atom, Clause, c_var, c_pred, c_functor, c_const, c_symbol
 import sys
@@ -368,6 +368,31 @@ if __name__ == '__main__':
 
         del solver
 
+    def test6():
+        solver = XSBProlog("/Users/seb/Documents/programs/XSB")
+
+        head = c_pred("head", 2)
+        tail = c_pred("tail", 2)
+        take_second = c_pred("take_second", 2)
+        H = c_var("Head")
+        T = c_var("Tail")
+        X = c_var("X")
+        Y = c_var("Y")
+
+        hatm1 = head(Pair(H, T), H)
+        tatm1 = tail(Pair(H, T), T)
+        cl = (take_second(X,Y) <= tail(X, T) & head(T, Y))
+
+        solver.assertz(hatm1)
+        solver.assertz(tatm1)
+        solver.assertz(cl)
+
+        l = List([1, 2, 3, 4, 5])
+        print(solver.query(take_second(l, X)))
+
+        del solver
+
     #test1()
     #test5()
+    test6()
 

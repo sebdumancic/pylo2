@@ -784,6 +784,8 @@ if __name__ == '__main__':
         l = List([1,2,3,4,5])
         solver.query(take_second(l, X))
 
+        del solver
+
 
 
     #test1()
