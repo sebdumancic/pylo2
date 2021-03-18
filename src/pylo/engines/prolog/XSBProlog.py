@@ -157,12 +157,21 @@ class XSBProlog(Prolog):
         else:
             max_solutions = -1
 
+        if 'time_limit' in kwargs:
+            time_limit = kwargs['time_limit']
+        else:
+            time_limit = None
+
         vars_of_interest = [[y for y in x.get_arguments() if isinstance(y, Variable)] for x in query]
         vars_of_interest = reduce(lambda x, y: x + y, vars_of_interest, [])
         vars_of_interest = reduce(lambda x, y: x + [y] if y not in x else x, vars_of_interest, [])
 
         string_repr = ','.join([str(x) for x in query])
-        res = pyxsb.pyxsb_query_string(f"{string_repr}.")
+
+        if time_limit:
+            res = pyxsb.pyxsb_query_string(f"timed_call(({string_repr}),[max({time_limit},fail)]).")
+        else:
+            res = pyxsb.pyxsb_query_string(f"{string_repr}.")
 
         all_solutions = []
         while res and max_solutions != 0:
@@ -392,7 +401,73 @@ if __name__ == '__main__':
 
         del solver
 
+    def test7(limit=10):
+        pl = XSBProlog("/Users/seb/Documents/programs/XSB")
+
+        p = c_pred("p", 2)
+        f = c_functor("t", 3)
+        f1 = p("a", "b")
+
+        pl.assertz(f1)
+
+        X = c_var("X")
+        Y = c_var("Y")
+
+        query = p(X, Y)
+
+        r = pl.has_solution(query)
+        print("has solution", r)
+
+        rv = pl.query(query, time_limit=limit)
+        print("all solutions", rv)
+
+        f2 = p("a", "c")
+        pl.assertz(f2)
+
+        rv = pl.query(query, time_limit=limit)
+        print("all solutions after adding f2", rv)
+
+        func1 = f(1, 2, 3)
+        f3 = p(func1, "b")
+        pl.assertz(f3)
+
+        rv = pl.query(query, time_limit=limit)
+        print("all solutions after adding structure", rv)
+
+        l = List([1, 2, 3, 4, 5])
+
+        member = c_pred("member", 2)
+        pl.use_module("lists", predicates=[member])
+
+        query2 = member(X, l)
+
+        rv = pl.query(query2, time_limit=limit)
+        print("all solutions to list membership ", rv)
+
+        r = c_pred("r", 2)
+        f4 = r("a", l)
+        f5 = r("a", "b")
+
+        pl.asserta(f4)
+        pl.asserta(f5)
+
+        query3 = r(X, Y)
+
+        rv = pl.query(query3, time_limit=limit)
+        print("all solutions after adding list ", rv)
+
+        q = c_pred("q", 2)
+        cl = (q("X", "Y") <= r("X", "Y") & r("X", "Z"))
+
+        pl.assertz(cl)
+        query4 = q("X", "Y")
+        rv = pl.query(query4, time_limit=limit)
+        print("all solutions to q: ", rv)
+
+        del pl
+
     #test1()
     #test5()
-    test6()
+    #test6()
+    #test7(10)
 

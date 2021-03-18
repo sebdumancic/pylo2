@@ -356,7 +356,8 @@ class SWIProlog(Prolog):
 
     def release(self):
         if not self.is_released:
-            swipy.swipy_cleanup(1)
+            #swipy.swipy_cleanup(1)
+            swipy.swipy_halt(1)
             self.is_released: bool = True
 
     def __del__(self):
@@ -483,11 +484,141 @@ class SWIProlog(Prolog):
 
             return True if r else False
 
+    def _wrap_in_call_time(self, query, time):
+        """
+        Wraps the query in call_with_time_limit. Assumes that query is already translated to swipy
+        :param query:
+        :param time:
+        :return:
+        """
+        func_atm = swipy.swipy_new_atom("call_with_time_limit")
+        func = swipy.swipy_new_functor(func_atm, 2)
+
+        compound_arg = swipy.swipy_new_term_refs(2)
+        _num_to_swipy_ref(time, compound_arg)
+        swipy.swipy_put_term(compound_arg + 1, query)
+
+        final_term = swipy.swipy_new_term_ref()
+        swipy.swipy_cons_functor(final_term, func, compound_arg)
+
+        return final_term
+
+    def _prepare_query(self, var_store, *query, max_time=None, max_depth=None, max_inference=None):
+        """
+        Prepares the query
+
+        Return swipl-transformed predicate and arguments needed to posed the query to the engine
+
+        :param var_store:
+        :param query:
+        :param max_time:
+        :param max_depth:
+        :param max_inference:
+        :return:
+        """
+        if len(query) == 1:
+            query = query[0]
+
+            if not (max_time or max_depth or max_inference):
+                predicate_name = query.get_predicate().get_name()
+                query_args = swipy.swipy_new_term_refs(query.get_predicate().get_arity())
+
+                for ind, arg in enumerate(query.get_arguments()):
+                    _to_swipy_ref(arg, query_args + ind, var_store)
+
+                pred = swipy.swipy_predicate(predicate_name, query.get_predicate().get_arity(), None)
+
+                return pred, query_args
+            else:
+                query_term = _lit_to_swipy(query, var_store)
+
+                if max_time:
+                    # if time limit should be imposed on the query
+
+                    pred = swipy.swipy_predicate("call_with_time_limit", 2, None)
+                    query_args = swipy.swipy_new_term_refs(2)
+
+                    swipy.swipy_put_integer(query_args, max_time)
+                    swipy.swipy_put_term(query_args+1, query_term)
+
+                    return pred, query_args
+                elif max_depth or max_inference:
+                    pred = swipy.swipy_predicate("call_with_depth_limit", 3, None) if max_depth else swipy.swipy_predicate("call_with_inference_limit", 3, None)
+                    query_args = swipy.swipy_new_term_refs(3)
+                    swipy.swipy_put_term(query_args, query_term)
+
+                    if max_depth:
+                        _num_to_swipy_ref(max_depth, query_args + 1)
+                    else:
+                        _num_to_swipy_ref(max_inference, query_args + 1)
+                    swipy.swipy_put_variable(query_args + 2)
+
+                    return pred, query_args
+
+        else:
+            swipy_objs = [_lit_to_swipy(x, var_store) if isinstance(x, Atom) else _neg_to_swipy(x, var_store) for x
+                          in query]
+
+            if not (max_time or max_depth or max_inference):
+                first = swipy_objs[0]
+                rest = _conjoin_literals(swipy_objs[1:])
+
+                compound_arg = swipy.swipy_new_term_refs(2)
+                swipy.swipy_put_term(compound_arg, first)
+                swipy.swipy_put_term(compound_arg + 1, rest)
+
+                predicate = swipy.swipy_predicate(",", 2, None)
+
+                return predicate, compound_arg
+            else:
+                query_term = _conjoin_literals(swipy_objs)
+
+                if max_time:
+                    # if time limit should be imposed on the query
+                    wrapped_term = self._wrap_in_call_time(query_term, max_time)
+                    exception = swipy.swipy_new_atom('time_limit_exceeded')
+                    fail = swipy.swipy_new_atom('fail')
+
+                    pred = swipy.swipy_predicate("catch", 3, None)
+                    query_args = swipy.swipy_new_term_refs(3)
+                    swipy.swipy_put_term(query_args, wrapped_term)
+                    swipy.swipy_put_term(query_args + 1, exception)
+                    swipy.swipy_put_term(query_args + 2, fail)
+
+                    return pred, query_args
+                elif max_depth or max_inference:
+                    pred = swipy.swipy_predicate("call_with_depth_limit", 3, None) if max_depth else swipy.swipy_predicate("call_with_inference_limit", 3, None)
+                    query_args = swipy.swipy_new_term_refs(3)
+                    swipy.swipy_put_term(query_args, query_term)
+
+                    if max_depth:
+                        _num_to_swipy_ref(max_depth, query_args + 1)
+                    else:
+                        _num_to_swipy_ref(max_inference, query_args + 1)
+                    swipy.swipy_put_variable(query_args + 2)
+
+                    return pred, query_args
+
     def query(self, *query, **kwargs):
         if 'max_solutions' in kwargs:
             max_solutions = kwargs['max_solutions']
         else:
             max_solutions = -1
+
+        if 'time_limit' in kwargs:
+            time_limit = kwargs['time_limit']
+        else:
+            time_limit = None
+
+        if 'depth_limit' in kwargs:
+            depth_limit = kwargs['depth_limit']
+        else:
+            depth_limit = None
+
+        if 'inference_limit' in kwargs:
+            inference_limit = kwargs['inference_limit']
+        else:
+            inference_limit = None
 
         vars_of_interest = [[y for y in x.get_arguments() if isinstance(y, Variable)] for x in query]
         vars_of_interest = reduce(lambda x, y: x + y, vars_of_interest, [])
@@ -498,28 +629,31 @@ class SWIProlog(Prolog):
             swipy.swipy_put_variable(tmp_v)
             var_store[v] = tmp_v
 
-        if len(query) == 1:
-            query = query[0]
-            predicate_name = query.get_predicate().get_name()
-            query_args = swipy.swipy_new_term_refs(query.get_predicate().get_arity())
+        # if len(query) == 1:
+        #     query = query[0]
+        #     predicate_name = query.get_predicate().get_name()
+        #     query_args = swipy.swipy_new_term_refs(query.get_predicate().get_arity())
+        #
+        #     for ind, arg in enumerate(query.get_arguments()):
+        #         _to_swipy_ref(arg, query_args + ind, var_store)
+        #
+        #     pred = swipy.swipy_predicate(predicate_name, query.get_predicate().get_arity(), None)
+        #     query = swipy.swipy_open_query(pred, query_args)
+        # else:
+        #     swipy_objs = [_lit_to_swipy(x, var_store) if isinstance(x, Atom) else _neg_to_swipy(x, var_store) for x
+        #                   in query]
+        #     first = swipy_objs[0]
+        #     rest = _conjoin_literals(swipy_objs[1:])
+        #
+        #     compound_arg = swipy.swipy_new_term_refs(2)
+        #     swipy.swipy_put_term(compound_arg, first)
+        #     swipy.swipy_put_term(compound_arg + 1, rest)
+        #
+        #     predicate = swipy.swipy_predicate(",", 2, None)
+        #     query = swipy.swipy_open_query(predicate, compound_arg)
 
-            for ind, arg in enumerate(query.get_arguments()):
-                _to_swipy_ref(arg, query_args + ind, var_store)
-
-            pred = swipy.swipy_predicate(predicate_name, query.get_predicate().get_arity(), None)
-            query = swipy.swipy_open_query(pred, query_args)
-        else:
-            swipy_objs = [_lit_to_swipy(x, var_store) if isinstance(x, Atom) else _neg_to_swipy(x, var_store) for x
-                          in query]
-            first = swipy_objs[0]
-            rest = _conjoin_literals(swipy_objs[1:])
-
-            compound_arg = swipy.swipy_new_term_refs(2)
-            swipy.swipy_put_term(compound_arg, first)
-            swipy.swipy_put_term(compound_arg + 1, rest)
-
-            predicate = swipy.swipy_predicate(",", 2, None)
-            query = swipy.swipy_open_query(predicate, compound_arg)
+        pred, compound_arg = self._prepare_query(var_store, *query, max_time=time_limit, max_depth=inference_limit, max_inference=inference_limit)
+        query = swipy.swipy_open_query(pred, compound_arg)
 
         r = swipy.swipy_next_solution(query)
 
@@ -782,14 +916,251 @@ if __name__ == '__main__':
         solver.assertz(cl)
 
         l = List([1,2,3,4,5])
-        solver.query(take_second(l, X))
+        print(solver.query(take_second(l, X)))
 
         del solver
+
+    def test7(limit=50):
+        pl = SWIProlog()
+
+        p = c_pred("p", 2)
+        f = c_functor("t", 3)
+        f1 = p("a", "b")
+
+        pl.assertz(f1)
+
+        X = c_var("X")
+        Y = c_var("Y")
+
+        query = p(X, Y)
+
+        r = pl.has_solution(query)
+        print("has solution", r)
+
+        rv = pl.query(query, time_limit=limit)
+        print("all solutions", rv)
+
+        f2 = p("a", "c")
+        pl.assertz(f2)
+
+        rv = pl.query(query, time_limit=limit)
+        print("all solutions after adding f2", rv)
+
+        func1 = f(1, 2, 3)
+        f3 = p(func1, "b")
+        pl.assertz(f3)
+
+        rv = pl.query(query, time_limit=limit)
+        print("all solutions after adding structure", rv)
+
+        l = List([1, 2, 3, 4, 5])
+
+        member = c_pred("member", 2)
+
+        query2 = member(X, l)
+
+        rv = pl.query(query2, time_limit=limit)
+        print("all solutions to list membership ", rv)
+
+        r = c_pred("r", 2)
+        f4 = r("a", l)
+        f5 = r("a", "b")
+
+        pl.asserta(f4)
+        pl.asserta(f5)
+
+        query3 = r(X, Y)
+
+        rv = pl.query(query3, time_limit=limit)
+        print("all solutions after adding list ", rv)
+
+        # Foreign predicates
+
+        def hello(t):
+            print("Foreign: Hello", t)
+
+        hello_pred = pl.register_foreign(hello, 1)
+        # print(hello_pred)
+
+        f_query = hello_pred("a")
+
+        pl.has_solution(f_query)
+
+        del p
+
+    def test8(limit=50):
+        pl = SWIProlog()
+
+        p = c_pred("p", 2)
+        f = c_functor("t", 3)
+        f1 = p("a", "b")
+
+        pl.assertz(f1)
+
+        X = c_var("X")
+        Y = c_var("Y")
+
+        query = p(X, Y)
+
+        r = pl.has_solution(query)
+        print("has solution", r)
+
+        rv = pl.query(query, depth_limit=limit)
+        print("all solutions", rv)
+
+        f2 = p("a", "c")
+        pl.assertz(f2)
+
+        rv = pl.query(query, depth_limit=limit)
+        print("all solutions after adding f2", rv)
+
+        func1 = f(1, 2, 3)
+        f3 = p(func1, "b")
+        pl.assertz(f3)
+
+        rv = pl.query(query, depth_limit=limit)
+        print("all solutions after adding structure", rv)
+
+        l = List([1, 2, 3, 4, 5])
+
+        member = c_pred("member", 2)
+
+        query2 = member(X, l)
+
+        rv = pl.query(query2, depth_limit=limit)
+        print("all solutions to list membership ", rv)
+
+        r = c_pred("r", 2)
+        f4 = r("a", l)
+        f5 = r("a", "b")
+
+        pl.asserta(f4)
+        pl.asserta(f5)
+
+        query3 = r(X, Y)
+
+        rv = pl.query(query3, depth_limit=limit)
+        print("all solutions after adding list ", rv)
+
+        # Foreign predicates
+
+        def hello(t):
+            print("Foreign: Hello", t)
+
+        hello_pred = pl.register_foreign(hello, 1)
+        # print(hello_pred)
+
+        f_query = hello_pred("a")
+
+        pl.has_solution(f_query)
+
+        del p
+
+    def test9(limit=50):
+        pl = SWIProlog()
+
+        p = c_pred("p", 2)
+        f = c_functor("t", 3)
+        f1 = p("a", "b")
+
+        pl.assertz(f1)
+
+        X = c_var("X")
+        Y = c_var("Y")
+
+        query = p(X, Y)
+
+        r = pl.has_solution(query)
+        print("has solution", r)
+
+        rv = pl.query(query, inference_limit=limit)
+        print("all solutions", rv)
+
+        f2 = p("a", "c")
+        pl.assertz(f2)
+
+        rv = pl.query(query, inference_limit=limit)
+        print("all solutions after adding f2", rv)
+
+        func1 = f(1, 2, 3)
+        f3 = p(func1, "b")
+        pl.assertz(f3)
+
+        rv = pl.query(query, inference_limit=limit)
+        print("all solutions after adding structure", rv)
+
+        l = List([1, 2, 3, 4, 5])
+
+        member = c_pred("member", 2)
+
+        query2 = member(X, l)
+
+        rv = pl.query(query2, inference_limit=limit)
+        print("all solutions to list membership ", rv)
+
+        r = c_pred("r", 2)
+        f4 = r("a", l)
+        f5 = r("a", "b")
+
+        pl.asserta(f4)
+        pl.asserta(f5)
+
+        query3 = r(X, Y)
+
+        rv = pl.query(query3, inference_limit=limit)
+        print("all solutions after adding list ", rv)
+
+        # Foreign predicates
+
+        def hello(t):
+            print("Foreign: Hello", t)
+
+        hello_pred = pl.register_foreign(hello, 1)
+        # print(hello_pred)
+
+        f_query = hello_pred("a")
+
+        pl.has_solution(f_query)
+
+        del p
+
+    def test10():
+
+        pl = SWIProlog()
+
+        p = c_pred("p", 2)
+        a = c_pred("a", 2)
+
+        f1 = p("a", "b")
+
+        pl.assertz(f1)
+
+        #cl1 = (a("X", "Y") <= p("X", "Y"))
+        cl2 = (a("X", "Y") <= a("X", "Z") & p("Z", "Y"))
+
+        #pl.assertz(cl1)
+        pl.assertz(cl2)
+
+        q = a("X", "Y")
+
+        print(pl.query(q, time_limit=1))
+
+        del pl
+
+
 
 
 
     #test1()
+    #test2()
+    #test4()
     #test5()
+    #test6()
+    #test7(limit=100)
+    #test8(limit=5)
+    #test9(limit=1)
+
+    test10()
 
 
 

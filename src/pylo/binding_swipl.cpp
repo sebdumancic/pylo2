@@ -31,6 +31,13 @@ PYBIND11_MODULE(swipy, m)
     m.attr("LIST_PAIR") = PL_LIST_PAIR;
     m.attr("LIST") = PL_LIST;
 
+    m.def("swipy_succeed", []() {
+        return TRUE;
+    });
+    m.def("swipy_fail", []() {
+        return FALSE;
+    });
+
     m.def("swipy_init", [](char *exec_path) {
        char *av[2];
        av[0] = (char *) exec_path;
@@ -179,5 +186,8 @@ PYBIND11_MODULE(swipy, m)
 
         return PL_register_foreign("hello", 1, (void *) hello, 0);
         }, "registers C functions as a predicate");
+
+    // exceptions
+    m.def("swipy_exception", &PL_exception, "creates an exception");
 
 }

@@ -1,3 +1,7 @@
+# 0.3.4
+ - exported succeed/fail for SWIPL
+ - added support for limited resources for querying (SWIPL and XSB)
+
 # 0.3.3
  - added support for pairs in SWIPL, Gnu, and XSB
  - constants can be enclosed in \" or \'
