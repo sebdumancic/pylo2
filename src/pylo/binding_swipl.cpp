@@ -183,8 +183,9 @@ PYBIND11_MODULE(swipy, m)
     // foreign predicate
     m.def("swipy_register_foreign", [](const string& name, int arity, py::object pyf, int flags) {
         char *fname = const_cast<char *>(name.c_str());
+        auto f = (int(*)(int)) py::cast<uint64_t>(pyf.attr("value"));
 
-        return PL_register_foreign("hello", 1, (void *) hello, 0);
+        return PL_register_foreign(fname, arity, (void *) f, 0);
         }, "registers C functions as a predicate");
 
     // exceptions

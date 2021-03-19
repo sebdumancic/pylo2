@@ -705,7 +705,7 @@ class SWIProlog(Prolog):
         fwrap2 = cwrap(fwrap)
         self._wrap_refs_to_keep.append(fwrap2)
 
-        res = swipy.swipy_register_foreign(pyfunction.__name__, arity, fwrap2, 0)
+        res = swipy.swipy_register_foreign(pyfunction.__name__, arity, ctypes.cast(fwrap2, ctypes.c_void_p), 0)
 
         return c_pred(pyfunction.__name__, arity)
 
@@ -1151,7 +1151,7 @@ if __name__ == '__main__':
 
 
 
-    #test1()
+    test1()
     #test2()
     #test4()
     #test5()
@@ -1160,7 +1160,7 @@ if __name__ == '__main__':
     #test8(limit=5)
     #test9(limit=1)
 
-    test10()
+    #test10()
 
 
 

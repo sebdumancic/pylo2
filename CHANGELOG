@@ -1,3 +1,6 @@
+# 0.4.0
+ - foreign functions in SWIPL
+
 # 0.3.4
  - exported succeed/fail for SWIPL
  - added support for limited resources for querying (SWIPL and XSB)
