@@ -96,11 +96,16 @@ def _pyxsb_string_to_pylo(term: str):
 class XSBProlog(Prolog):
 
     def __init__(self, exec_path=None):
+        # Initializes is_released in case exec_path is not found (which calls release())
+        super().__init__()
+
         if exec_path is None:
             exec_path = os.getenv('XSB_HOME', None)
             raise Exception(f"Cannot find XSB_HOME environment variable")
         pyxsb.pyxsb_init_string(exec_path)
-        super().__init__()
+        self._asserted_clauses = set()
+        self._asserted_atoms = set()
+
 
     def release(self):
         if not self.is_released:
@@ -122,24 +127,40 @@ class XSBProlog(Prolog):
     def asserta(self, clause: Union[Clause, Atom]):
         if isinstance(clause, Atom):
             query = f"asserta({clause})."
+            self._asserted_atoms.add(clause)
             return pyxsb.pyxsb_command_string(query)
         else:
             query = f"asserta(({clause}))."
+            self._asserted_clauses.add(clause)
             return pyxsb.pyxsb_command_string(query)
 
     def assertz(self, clause: Union[Atom, Clause]):
         if isinstance(clause, Atom):
-            query = f"assertz({clause})."
-            return pyxsb.pyxsb_command_string(query)
+            if not clause in self._asserted_atoms:
+                query = f"assertz({clause})."
+                self._asserted_atoms.add(clause)
+                return pyxsb.pyxsb_command_string(query)
         else:
-            query = f"assertz(({clause}))."
-            return pyxsb.pyxsb_command_string(query)
+            if not clause in self._asserted_clauses:
+                query = f"assertz(({clause}))."
+                self._asserted_clauses.add(clause)
+                return pyxsb.pyxsb_command_string(query)
 
     def retract(self, clause: Union[Atom, Clause]):
         if isinstance(clause, Atom):
-            return pyxsb.pyxsb_command_string(f"retract({clause}).")
+            if clause in self._asserted_atoms:
+                self._asserted_atoms.remove(clause)
+                return pyxsb.pyxsb_command_string(f"retract({clause}).")
         else:
-            return pyxsb.pyxsb_command_string(f"retract(({clause})).")
+            if clause in self._asserted_clauses:
+                self._asserted_clauses.remove(clause)
+                return pyxsb.pyxsb_command_string(f"retract(({clause})).")
+
+    def retract_all(self):
+        for cl in [cl for cl in self._asserted_clauses]:
+            self.retract(cl)
+        for cl in [cl for cl in self._asserted_atoms]:
+            self.retract(cl)
 
     def has_solution(self, *query: Atom):
         #assert not all([x.is_ground() for x in query]), "XSB Prolog currently cannot query ground queries"

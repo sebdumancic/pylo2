@@ -659,6 +659,21 @@ class Body:
 
         return vars_ordered
 
+    def get_arguments(self) -> Sequence[Variable]:
+        """
+        Returns the arguments of the literals in the body
+        """
+        args_ordered = []
+        args_covered = set()
+        for i in range(len(self._literals)):
+            to_add = [
+                x for x in self._literals[i].get_arguments() if x not in args_covered
+            ]
+            args_ordered += to_add
+            args_covered = args_covered.union(to_add)
+
+        return args_ordered
+
     def substitute(self, term_map: Dict[Term, Term]):
         return Body(*[x.substitute(term_map) for x in self._literals])
 
@@ -813,6 +828,12 @@ class Clause:
             Returns only the head variables
         """
         return self._head.get_variables()
+
+    def get_head_arguments(self) -> Sequence[Term]:
+        """
+        Returns only the head arguments
+        """
+        return self._head.get_arguments()
 
     def get_body_variables(self) -> Sequence[Variable]:
         """

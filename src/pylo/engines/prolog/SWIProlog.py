@@ -352,6 +352,8 @@ class SWIProlog(Prolog):
         self._callback_arities = {}
         self._wrapped_functions = {}
         self._wrap_refs_to_keep = []
+        self._asserted_clauses = set()
+
         super(SWIProlog, self).__init__()
 
     def release(self):
@@ -408,47 +410,62 @@ class SWIProlog(Prolog):
         return r
 
     def asserta(self, clause):
-        var_store = {}
-        if isinstance(clause, Atom):
-            swipl_object = _lit_to_swipy(clause, var_store)
-        else:
-            swipl_object = _cl_to_swipy(clause, var_store)
+        if not clause in self._asserted_clauses:
+            var_store = {}
+            if isinstance(clause, Atom):
+                swipl_object = _lit_to_swipy(clause, var_store)
+            else:
+                swipl_object = _cl_to_swipy(clause, var_store)
 
-        asserta = swipy.swipy_predicate("asserta", 1, None)
-        query = swipy.swipy_open_query(asserta, swipl_object)
-        r = swipy.swipy_next_solution(query)
-        swipy.swipy_close_query(query)
+            asserta = swipy.swipy_predicate("asserta", 1, None)
+            query = swipy.swipy_open_query(asserta, swipl_object)
+            r = swipy.swipy_next_solution(query)
+            swipy.swipy_close_query(query)
 
-        return r
+            self._asserted_clauses.add(clause)
+
+            return r
 
     def assertz(self, clause: Union[Atom, Clause]):
-        var_store = {}
-        if isinstance(clause, Atom):
-            swipl_object = _lit_to_swipy(clause, var_store)
-        elif isinstance(clause, Clause):
-            swipl_object = _cl_to_swipy(clause, var_store)
-        else:
-            raise Exception(f"can only assertz atoms or clauses (got {clause})")
+        if not clause in self._asserted_clauses:
+            var_store = {}
+            if isinstance(clause, Atom):
+                swipl_object = _lit_to_swipy(clause, var_store)
+            elif isinstance(clause, Clause):
+                swipl_object = _cl_to_swipy(clause, var_store)
+            else:
+                raise Exception(f"can only assertz atoms or clauses (got {clause})")
 
-        asserta = swipy.swipy_predicate("assertz", 1, None)
-        query = swipy.swipy_open_query(asserta, swipl_object)
-        r = swipy.swipy_next_solution(query)
-        swipy.swipy_close_query(query)
+            asserta = swipy.swipy_predicate("assertz", 1, None)
+            query = swipy.swipy_open_query(asserta, swipl_object)
+            r = swipy.swipy_next_solution(query)
+            swipy.swipy_close_query(query)
 
-        return r
+            self._asserted_clauses.add(clause)
+
+            return r
 
     def retract(self, clause: Union[Atom, Clause]):
-        if isinstance(clause, Atom):
-            lit = _lit_to_swipy(clause, {})
+        if clause in self._asserted_clauses:
+            if isinstance(clause, Atom):
+                lit = _lit_to_swipy(clause, {})
+            else:
+                lit = _cl_to_swipy(clause, {})
+
+            retract = swipy.swipy_predicate("retract", 1, None)
+            query = swipy.swipy_open_query(retract, lit)
+            r = swipy.swipy_next_solution(query)
+            swipy.swipy_close_query(query)
+
+            self._asserted_clauses.remove(clause)
+
+            return r
         else:
-            lit = _cl_to_swipy(clause, {})
+            print("Clause {} not in asserted_clause {}".format(clause,self._asserted_clauses))
 
-        retract = swipy.swipy_predicate("retract", 1, None)
-        query = swipy.swipy_open_query(retract, lit)
-        r = swipy.swipy_next_solution(query)
-        swipy.swipy_close_query(query)
-
-        return r
+    def retract_all(self):
+        for cl in [cl for cl in self._asserted_clauses]:
+            self.retract(cl)
 
     def has_solution(self, *query: Union[Atom, Not]):
         var_store = {}

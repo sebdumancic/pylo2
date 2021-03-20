@@ -200,6 +200,9 @@ class GNUProlog(Prolog):
 
     def __init__(self):
         pygprolog.pygp_Start_Prolog()
+
+        self._asserted_atoms = set()
+        self._asserted_clauses = set()
         super().__init__()
 
     def release(self):
@@ -224,25 +227,27 @@ class GNUProlog(Prolog):
         raise Exception(f"GNUProlog does not have modules.")
 
     def _asserta_lit(self, literal: Atom):
-        pl = _lit_to_pygp(literal)
-        asa_p = pygprolog.pygp_Find_Atom("asserta")
+        if literal not in self._asserted_atoms:
+            pl = _lit_to_pygp(literal)
+            asa_p = pygprolog.pygp_Find_Atom("asserta")
 
-        pygprolog.pygp_Query_Begin()
-        q_Var1 = pygprolog.pygp_Query_Call(asa_p, 1, [pl])
-        pygprolog.pygp_Query_End()
+            pygprolog.pygp_Query_Begin()
+            q_Var1 = pygprolog.pygp_Query_Call(asa_p, 1, [pl])
+            pygprolog.pygp_Query_End()
 
-        return q_Var1
+            return q_Var1
 
     def _asserta_cl(self, clause: Clause):
-        clp = _cl_to_pygp(clause)
+        if clause not in self._asserted_clauses:
+            clp = _cl_to_pygp(clause)
 
-        asa_p = pygprolog.pygp_Find_Atom("asserta")
+            asa_p = pygprolog.pygp_Find_Atom("asserta")
 
-        pygprolog.pygp_Query_Begin()
-        q_Var1 = pygprolog.pygp_Query_Call(asa_p, 1, [clp])
-        pygprolog.pygp_Query_End()
+            pygprolog.pygp_Query_Begin()
+            q_Var1 = pygprolog.pygp_Query_Call(asa_p, 1, [clp])
+            pygprolog.pygp_Query_End()
 
-        return q_Var1
+            return q_Var1
 
     def asserta(self, clause: Union[Atom, Clause]):
         if isinstance(clause, Atom):
@@ -251,25 +256,27 @@ class GNUProlog(Prolog):
             return self._asserta_cl(clause)
 
     def _assertz_lit(self, literal: Atom):
-        pl = _lit_to_pygp(literal)
-        asa_p = pygprolog.pygp_Find_Atom("assertz")
+        if literal not in self._asserted_atoms:
+            pl = _lit_to_pygp(literal)
+            asa_p = pygprolog.pygp_Find_Atom("assertz")
 
-        pygprolog.pygp_Query_Begin()
-        q_Var1 = pygprolog.pygp_Query_Call(asa_p, 1, [pl])
-        pygprolog.pygp_Query_End()
+            pygprolog.pygp_Query_Begin()
+            q_Var1 = pygprolog.pygp_Query_Call(asa_p, 1, [pl])
+            pygprolog.pygp_Query_End()
 
-        return q_Var1
+            return q_Var1
 
     def _assertz_cl(self, clause: Clause):
-        clp = _cl_to_pygp(clause)
+        if clause not in self._asserted_clauses:
+            clp = _cl_to_pygp(clause)
 
-        asa_p = pygprolog.pygp_Find_Atom("assertz")
+            asa_p = pygprolog.pygp_Find_Atom("assertz")
 
-        pygprolog.pygp_Query_Begin()
-        q_Var1 = pygprolog.pygp_Query_Call(asa_p, 1, [clp])
-        pygprolog.pygp_Query_End()
+            pygprolog.pygp_Query_Begin()
+            q_Var1 = pygprolog.pygp_Query_Call(asa_p, 1, [clp])
+            pygprolog.pygp_Query_End()
 
-        return q_Var1
+            return q_Var1
 
     def assertz(self, clause: Union[Atom, Clause]):
         if isinstance(clause, Atom):
@@ -278,31 +285,43 @@ class GNUProlog(Prolog):
             return self._assertz_cl(clause)
 
     def _retract_lit(self, literal: Atom):
-        pl = _lit_to_pygp(literal)
-        asa_p = pygprolog.pygp_Find_Atom("retract")
+        if literal in self._asserted_atoms:
+            pl = _lit_to_pygp(literal)
+            asa_p = pygprolog.pygp_Find_Atom("retract")
 
-        pygprolog.pygp_Query_Begin()
-        q_Var1 = pygprolog.pygp_Query_Call(asa_p, 1, [pl])
-        pygprolog.pygp_Query_End()
+            pygprolog.pygp_Query_Begin()
+            q_Var1 = pygprolog.pygp_Query_Call(asa_p, 1, [pl])
+            pygprolog.pygp_Query_End()
 
-        return q_Var1
+            self._asserted_atoms.remove(literal)
+
+            return q_Var1
 
     def _retract_cl(self, clause: Clause):
-        clp = _cl_to_pygp(clause)
+        if clause in self._asserted_clauses:
+            clp = _cl_to_pygp(clause)
 
-        asa_p = pygprolog.pygp_Find_Atom("retract")
+            asa_p = pygprolog.pygp_Find_Atom("retract")
 
-        pygprolog.pygp_Query_Begin()
-        q_Var1 = pygprolog.pygp_Query_Call(asa_p, 1, [clp])
-        pygprolog.pygp_Query_End()
+            pygprolog.pygp_Query_Begin()
+            q_Var1 = pygprolog.pygp_Query_Call(asa_p, 1, [clp])
+            pygprolog.pygp_Query_End()
 
-        return q_Var1
+            self._asserted_clauses.remove(clause)
+
+            return q_Var1
 
     def retract(self, clause: Union[Atom, Clause]):
         if isinstance(clause, Atom):
             return self._retract_lit(clause)
         if isinstance(clause, Clause):
             return self._retract_cl(clause)
+
+    def retract_all(self):
+        for cl in [cl for cl in self._asserted_clauses]:
+            self.retract(cl)
+        for atom in  [cl for cl in self._asserted_atoms]:
+            self.retract(atom)
 
     def has_solution(self, *query: Union[Atom, Not]):
         var_store = {}
