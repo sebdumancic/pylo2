@@ -629,29 +629,6 @@ class SWIProlog(Prolog):
             swipy.swipy_put_variable(tmp_v)
             var_store[v] = tmp_v
 
-        # if len(query) == 1:
-        #     query = query[0]
-        #     predicate_name = query.get_predicate().get_name()
-        #     query_args = swipy.swipy_new_term_refs(query.get_predicate().get_arity())
-        #
-        #     for ind, arg in enumerate(query.get_arguments()):
-        #         _to_swipy_ref(arg, query_args + ind, var_store)
-        #
-        #     pred = swipy.swipy_predicate(predicate_name, query.get_predicate().get_arity(), None)
-        #     query = swipy.swipy_open_query(pred, query_args)
-        # else:
-        #     swipy_objs = [_lit_to_swipy(x, var_store) if isinstance(x, Atom) else _neg_to_swipy(x, var_store) for x
-        #                   in query]
-        #     first = swipy_objs[0]
-        #     rest = _conjoin_literals(swipy_objs[1:])
-        #
-        #     compound_arg = swipy.swipy_new_term_refs(2)
-        #     swipy.swipy_put_term(compound_arg, first)
-        #     swipy.swipy_put_term(compound_arg + 1, rest)
-        #
-        #     predicate = swipy.swipy_predicate(",", 2, None)
-        #     query = swipy.swipy_open_query(predicate, compound_arg)
-
         pred, compound_arg = self._prepare_query(var_store, *query, max_time=time_limit, max_depth=inference_limit, max_inference=inference_limit)
         query = swipy.swipy_open_query(pred, compound_arg)
 
@@ -674,7 +651,7 @@ class SWIProlog(Prolog):
 
         return all_solutions
 
-    def _callback(self, arity):
+    def _callback_deterministic(self, arity):
         res = self._callback_arities.get(arity)
         if res is None:
             args = [ctypes.c_uint64] + [ctypes.c_uint64]*arity
@@ -683,25 +660,32 @@ class SWIProlog(Prolog):
 
         return res
 
-    def _foreign_wrapper(self, pyfunction):
+    def _foreign_wrapper_deterministic(self, pyfunction):
         res = self._wrapped_functions.get(pyfunction)
         if res is None:
             def wrapper(*args):
                 swipy_term_to_var = {}
-                args = [_read_swipy(x, swipy_term_to_var) for x in args]
-                print(f"function {pyfunction.__name__} with args: {args}")
-                # TODO: pyfunction should take the original args as input in order to give the ability to put something in variables
-                r = pyfunction(*args)
-                return (r is None) and True or r
+                args_pylo = [_read_swipy(x, swipy_term_to_var) for x in args]
+                r = pyfunction(*args_pylo)
+
+                if not isinstance(r, dict):
+                    # if there is nothing to unify
+                    return (r is None) and True or r
+                else:
+                    # dictionary with key being the argument index, and value being a term to unify
+                    term_map = {}
+                    for k in r:
+                        swipy.swipy_unify(args[k], _to_swipy(r[k], term_map))
+                    return True
 
             res = wrapper
             self._wrapped_functions[pyfunction] = res
 
         return res
 
-    def register_foreign(self, pyfunction, arity):
-        cwrap = self._callback(arity)
-        fwrap = self._foreign_wrapper(pyfunction)
+    def register_foreign(self, pyfunction, arity, nondeterministic=False):
+        cwrap = self._callback_deterministic(arity)
+        fwrap = self._foreign_wrapper_deterministic(pyfunction)
         fwrap2 = cwrap(fwrap)
         self._wrap_refs_to_keep.append(fwrap2)
 
@@ -1147,11 +1131,37 @@ if __name__ == '__main__':
 
         del pl
 
+    def test11():
+        pl = SWIProlog()
+
+        # Foreign predicates
+
+        def hello(t1, t2):
+            print("Foreign: Hello", type(t1), " and ", type(t2))
+
+        hello_pred = pl.register_foreign(hello, 2)
+        # print(hello_pred)
+
+        f_query = hello_pred("a", "b")
+
+        pl.query(f_query)
+
+        def inc(t1, t2):
+            return {1: t1 + 1}
+
+        inc = pl.register_foreign(inc, 2)
+
+        f_query = inc(3, "X")
+
+        r = pl.query(f_query)
+        print(r)
+
+        del pl
 
 
 
 
-    test1()
+    #test1()
     #test2()
     #test4()
     #test5()
@@ -1161,6 +1171,7 @@ if __name__ == '__main__':
     #test9(limit=1)
 
     #test10()
+    test11()
 
 
 

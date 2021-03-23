@@ -40,7 +40,7 @@ class Prolog(ABC):
         pass
 
     @abstractmethod
-    def register_foreign(self, pyfunction, arity):
+    def register_foreign(self, pyfunction, arity, nondeterministic=False):
         pass
 
 
